@@ -46,13 +46,13 @@ const ParticleBackground: React.FC = () => {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
         
-        // Deep Space Blue Palette
+        // Aurora / Nebula Palette (Brighter & Colorful)
         const colors = [
-          'rgba(34, 211, 238, ',  // Cyan-400 (Bright Cyan)
-          'rgba(96, 165, 250, ',  // Blue-400 (Bright Blue)
-          'rgba(129, 140, 248, ', // Indigo-400 (Soft Indigo)
           'rgba(255, 255, 255, ', // White (Stars)
-          'rgba(56, 189, 248, ',  // Sky-400 (Deep Sky Blue)
+          'rgba(167, 139, 250, ', // Violet-400
+          'rgba(244, 114, 182, ', // Pink-400
+          'rgba(56, 189, 248, ',  // Sky-400
+          'rgba(45, 212, 191, ',  // Teal-400
         ];
         const colorPrefix = colors[Math.floor(Math.random() * colors.length)];
         
@@ -61,8 +61,8 @@ const ParticleBackground: React.FC = () => {
           y,
           baseX: x,
           baseY: y,
-          vx: (Math.random() - 0.5) * 0.2, // Slower movement for "space" feel
-          vy: (Math.random() - 0.5) * 0.2,
+          vx: (Math.random() - 0.5) * 0.3, 
+          vy: (Math.random() - 0.5) * 0.3,
           size,
           density: (Math.random() * 20) + 5,
           color: colorPrefix
@@ -71,11 +71,18 @@ const ParticleBackground: React.FC = () => {
     };
 
     const animate = () => {
-      // Deep Space Gradient Background
-      const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
-      gradient.addColorStop(0, '#020617'); // Slate-950 (Deepest Black-Blue)
-      gradient.addColorStop(0.5, '#0f172a'); // Slate-900 (Mid Deep Blue)
-      gradient.addColorStop(1, '#172554'); // Blue-950 (Rich Deep Blue)
+      // Aurora Gradient Background
+      // Using a rich, vibrant gradient instead of deep black
+      const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
+      gradient.addColorStop(0, '#4c1d95');   // Violet-900 (Top Left)
+      gradient.addColorStop(0.4, '#312e81'); // Indigo-900
+      gradient.addColorStop(0.7, '#1e3a8a'); // Blue-900
+      gradient.addColorStop(1, '#0f766e');   // Teal-700 (Bottom Right)
+      
+      // Alternative brighter approach:
+      // const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+      // gradient.addColorStop(0, '#312e81'); // Indigo-900
+      // gradient.addColorStop(1, '#be185d'); // Pink-700
       
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -137,13 +144,13 @@ const ParticleBackground: React.FC = () => {
   }, []);
 
   return (
-    <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-b from-slate-950 via-slate-900 to-blue-950">
+    <div className="fixed inset-0 z-0 pointer-events-none bg-gradient-to-br from-violet-900 via-indigo-900 to-teal-800">
         <canvas
             ref={canvasRef}
-            className="absolute inset-0 w-full h-full"
+            className="absolute inset-0 w-full h-full mix-blend-screen"
         />
-        {/* Overlay Vignette for depth */}
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.6)_100%)]" />
+        {/* Lighter Vignette */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.3)_100%)]" />
     </div>
   );
 };

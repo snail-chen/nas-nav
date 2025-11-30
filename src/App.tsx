@@ -30,13 +30,13 @@ function DockIcon({
       ref={ref}
       style={{ width }}
       onClick={onClick}
-      className="aspect-square rounded-2xl bg-[#1e293b]/60 backdrop-blur-md border border-white/10 flex items-center justify-center relative group cursor-pointer hover:bg-[#334155]/60 transition-colors shadow-lg shadow-black/20"
+      className="aspect-square rounded-2xl bg-white/10 backdrop-blur-md border border-white/20 flex items-center justify-center relative group cursor-pointer hover:bg-white/20 transition-colors shadow-lg"
     >
       <div className="w-full h-full flex items-center justify-center p-2">
         {children}
       </div>
       {label && (
-        <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 rounded-lg bg-[#020617]/90 backdrop-blur-md text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 px-3 py-1 rounded-lg bg-black/50 backdrop-blur-md text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none border border-white/10 shadow-xl">
           {label}
         </div>
       )}
@@ -92,12 +92,12 @@ const App: React.FC = () => {
       <ParticleBackground />
 
       {/* Top Status Bar */}
-      <div className="absolute top-0 left-0 w-full h-8 px-4 flex justify-between items-center z-20 bg-[#020617]/60 backdrop-blur-md border-b border-white/5 text-xs font-medium text-cyan-100/80">
+      <div className="absolute top-0 left-0 w-full h-8 px-4 flex justify-between items-center z-20 bg-black/20 backdrop-blur-md border-b border-white/10 text-xs font-medium text-white/90">
         <div className="flex items-center gap-4">
-          <span className="font-bold text-sm text-white"> NAS OS</span>
-          <span className="hidden sm:inline hover:text-white transition-colors cursor-default">File</span>
-          <span className="hidden sm:inline hover:text-white transition-colors cursor-default">Edit</span>
-          <span className="hidden sm:inline hover:text-white transition-colors cursor-default">View</span>
+          <span className="font-bold text-sm text-white drop-shadow-md"> NAS OS</span>
+          <span className="hidden sm:inline hover:text-white transition-colors cursor-default drop-shadow-sm">File</span>
+          <span className="hidden sm:inline hover:text-white transition-colors cursor-default drop-shadow-sm">Edit</span>
+          <span className="hidden sm:inline hover:text-white transition-colors cursor-default drop-shadow-sm">View</span>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -127,13 +127,13 @@ const App: React.FC = () => {
                 href={getFullUrl(link.port)}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="relative w-24 h-24 rounded-[24px] bg-gradient-to-br from-[#1e293b]/80 to-[#0f172a]/90 backdrop-blur-xl border border-white/10 shadow-2xl flex items-center justify-center overflow-hidden group-hover:shadow-cyan-500/20 group-hover:border-cyan-400/30 transition-all duration-300 group-hover:-translate-y-1"
+                className="relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl"
               >
                 {/* Inner Glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/20 to-blue-600/20 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 {/* Icon */}
-                <div className="relative z-10 text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-br from-cyan-200 to-blue-400 drop-shadow-sm group-hover:scale-110 transition-transform duration-300">
+                <div className="relative z-10 text-3xl font-bold text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300">
                   {link.name.charAt(0).toUpperCase()}
                 </div>
                 
@@ -144,12 +144,12 @@ const App: React.FC = () => {
                     e.stopPropagation();
                     removeLink(link.id);
                   }}
-                  className="absolute top-2 left-2 p-1.5 rounded-full bg-red-500/90 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 shadow-lg"
+                  className="absolute top-2 left-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 shadow-lg"
                 >
                   <X className="w-3 h-3" />
                 </button>
               </a>
-              <span className="text-sm font-medium text-slate-200 drop-shadow-md text-center truncate w-full px-2 group-hover:text-white transition-colors">
+              <span className="text-sm font-medium text-white drop-shadow-lg text-center truncate w-full px-2">
                 {link.name}
               </span>
             </motion.div>
@@ -162,23 +162,23 @@ const App: React.FC = () => {
         <motion.div
           onMouseMove={(e) => mouseX.set(e.pageX)}
           onMouseLeave={() => mouseX.set(Infinity)}
-          className="h-20 px-4 flex items-center gap-4 rounded-3xl bg-[#0f172a]/70 backdrop-blur-xl border border-cyan-500/20 shadow-2xl ring-1 ring-white/5"
+          className="h-20 px-4 flex items-center gap-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl ring-1 ring-white/10"
         >
           <DockIcon mouseX={mouseX} onClick={() => setIsAddModalOpen(true)} label="Add App">
-            <Plus className="w-full h-full text-cyan-400" />
+            <Plus className="w-full h-full text-white" />
           </DockIcon>
           
-          <div className="w-[1px] h-10 bg-white/10 my-auto mx-2" />
+          <div className="w-[1px] h-10 bg-white/20 my-auto mx-2" />
 
           <DockIcon mouseX={mouseX} onClick={() => {
             setTempBaseUrl(config.baseUrl);
             setIsSettingsOpen(true);
           }} label="Settings">
-            <Settings className="w-full h-full text-slate-400 group-hover:text-cyan-200 transition-colors" />
+            <Settings className="w-full h-full text-white" />
           </DockIcon>
           
           <DockIcon mouseX={mouseX} label="System">
-            <Monitor className="w-full h-full text-blue-400 group-hover:text-blue-300 transition-colors" />
+            <Monitor className="w-full h-full text-white" />
           </DockIcon>
         </motion.div>
       </div>
