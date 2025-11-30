@@ -46,5 +46,12 @@ export const useConfig = () => {
     }));
   };
 
-  return { config, updateBaseUrl, addLink, removeLink, updateLink };
+  const updateLinkIcon = (id: string, iconUrl: string | undefined) => {
+    setConfig(prev => ({
+      ...prev,
+      links: prev.links.map(l => (l.id === id ? { ...l, iconUrl } : l)),
+    }));
+  };
+
+  return { config, updateBaseUrl, addLink, removeLink, updateLink, updateLinkIcon };
 };

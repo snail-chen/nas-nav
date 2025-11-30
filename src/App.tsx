@@ -94,7 +94,7 @@ function DockIcon({
 
 // --- Main App ---
 const App: React.FC = () => {
-  const { config, updateBaseUrl, addLink, removeLink, updateLink } = useConfig();
+  const { config, updateBaseUrl, addLink, removeLink, updateLink, updateLinkIcon } = useConfig();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   
@@ -171,6 +171,20 @@ const App: React.FC = () => {
     return `${prefix}${config.baseUrl}:${port}`;
   };
 
+  const handleLinkClick = (link: NavLink) => {
+    if (!link.iconUrl) {
+      const url = getFullUrl(link.port);
+      const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
+      const faviconUrl = `${cleanUrl}/favicon.ico`;
+      
+      const img = new Image();
+      img.src = faviconUrl;
+      img.onload = () => {
+        updateLinkIcon(link.id, faviconUrl);
+      };
+    }
+  };
+
   return (
     <div className="h-screen w-screen overflow-hidden relative text-slate-100 font-sans selection:bg-cyan-500/30" onClick={() => setContextMenu(null)}>
       <ParticleBackground />
@@ -225,6 +239,7 @@ const App: React.FC = () => {
                 href={getFullUrl(link.port)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => handleLinkClick(link)}
                 onContextMenu={(e) => handleContextMenu(e, link.id)}
                 className="relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl"
               >
@@ -232,9 +247,18 @@ const App: React.FC = () => {
                 <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                 
                 {/* Icon */}
-                <div className="relative z-10 text-3xl font-bold text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300">
-                  {link.name.charAt(0).toUpperCase()}
-                </div>
+                {link.iconUrl ? (
+                  <img 
+                    src={link.iconUrl}
+                    alt={link.name}
+                    className="relative z-10 w-16 h-16 object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300"
+                    onError={() => updateLinkIcon(link.id, undefined)}
+                  />
+                ) : (
+                  <div className="relative z-10 text-3xl font-bold text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300">
+                    {link.name.charAt(0).toUpperCase()}
+                  </div>
+                )}
                 
                 {/* Hover remove button */}
                 <button

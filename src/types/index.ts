@@ -2,7 +2,7 @@ export interface NavLink {
   id: string;
   name: string;
   port: string;
-  // Optional: Icon name or custom path if needed later
+  iconUrl?: string;
 }
 
 export interface AppConfig {
