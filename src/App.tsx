@@ -1,8 +1,56 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { X, Settings, Plus, Monitor, Search, Wifi } from 'lucide-react';
+import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2 } from 'lucide-react';
 import { useConfig } from './hooks/useConfig';
 import ParticleBackground from './components/ParticleBackground';
+import { NavLink } from './types';
+
+// --- Context Menu Component ---
+interface ContextMenuProps {
+  x: number;
+  y: number;
+  onEdit: () => void;
+  onDelete: () => void;
+  onClose: () => void;
+}
+
+const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClose }) => {
+  const menuRef = React.useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node)) {
+        onClose();
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={menuRef}
+      style={{ top: y, left: x }}
+      className="fixed z-50 w-48 bg-slate-800/90 backdrop-blur-xl border border-white/10 rounded-lg shadow-2xl overflow-hidden py-1"
+    >
+      <button
+        onClick={onEdit}
+        className="w-full px-4 py-2 text-left text-sm text-white hover:bg-blue-500/50 flex items-center gap-2 transition-colors"
+      >
+        <Edit2 className="w-4 h-4" />
+        Edit
+      </button>
+      <div className="h-[1px] bg-white/10 my-1" />
+      <button
+        onClick={onDelete}
+        className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/20 flex items-center gap-2 transition-colors"
+      >
+        <Trash2 className="w-4 h-4" />
+        Delete
+      </button>
+    </div>
+  );
+};
 
 // --- Dock Icon Component ---
 function DockIcon({ 
@@ -46,14 +94,18 @@ function DockIcon({
 
 // --- Main App ---
 const App: React.FC = () => {
-  const { config, updateBaseUrl, addLink, removeLink } = useConfig();
+  const { config, updateBaseUrl, addLink, removeLink, updateLink } = useConfig();
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
+  const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   
+  // Context Menu State
+  const [contextMenu, setContextMenu] = useState<{ x: number; y: number; linkId: string } | null>(null);
+
   // Local state
   const [tempBaseUrl, setTempBaseUrl] = useState(config.baseUrl);
-  const [newLinkName, setNewLinkName] = useState('');
-  const [newLinkPort, setNewLinkPort] = useState('');
+  const [editingLink, setEditingLink] = useState<NavLink | null>(null);
+  const [linkName, setLinkName] = useState('');
+  const [linkPort, setLinkPort] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
   // Dock mouse tracking
@@ -69,13 +121,45 @@ const App: React.FC = () => {
     setIsSettingsOpen(false);
   };
 
-  const handleAddLink = (e: React.FormEvent) => {
+  const openAddModal = () => {
+    setEditingLink(null);
+    setLinkName('');
+    setLinkPort('');
+    setIsLinkModalOpen(true);
+  };
+
+  const openEditModal = (link: NavLink) => {
+    setEditingLink(link);
+    setLinkName(link.name);
+    setLinkPort(link.port);
+    setIsLinkModalOpen(true);
+    setContextMenu(null);
+  };
+
+  const handleSaveLink = (e: React.FormEvent) => {
     e.preventDefault();
-    if (newLinkName && newLinkPort) {
-      addLink(newLinkName, newLinkPort);
-      setNewLinkName('');
-      setNewLinkPort('');
-      setIsAddModalOpen(false);
+    if (linkName && linkPort) {
+      if (editingLink) {
+        updateLink(editingLink.id, linkName, linkPort);
+      } else {
+        addLink(linkName, linkPort);
+      }
+      setLinkName('');
+      setLinkPort('');
+      setIsLinkModalOpen(false);
+      setEditingLink(null);
+    }
+  };
+
+  const handleContextMenu = (e: React.MouseEvent, linkId: string) => {
+    e.preventDefault();
+    setContextMenu({ x: e.clientX, y: e.clientY, linkId });
+  };
+
+  const handleDeleteLink = () => {
+    if (contextMenu) {
+      removeLink(contextMenu.linkId);
+      setContextMenu(null);
     }
   };
 
@@ -88,8 +172,22 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="h-screen w-screen overflow-hidden relative text-slate-100 font-sans selection:bg-cyan-500/30">
+    <div className="h-screen w-screen overflow-hidden relative text-slate-100 font-sans selection:bg-cyan-500/30" onClick={() => setContextMenu(null)}>
       <ParticleBackground />
+
+      {/* Context Menu */}
+      {contextMenu && (
+        <ContextMenu
+          x={contextMenu.x}
+          y={contextMenu.y}
+          onEdit={() => {
+            const link = config.links.find(l => l.id === contextMenu.linkId);
+            if (link) openEditModal(link);
+          }}
+          onDelete={handleDeleteLink}
+          onClose={() => setContextMenu(null)}
+        />
+      )}
 
       {/* Top Status Bar */}
       <div className="absolute top-0 left-0 w-full h-8 px-4 flex justify-between items-center z-20 bg-black/20 backdrop-blur-md border-b border-white/10 text-xs font-medium text-white/90">
@@ -127,6 +225,7 @@ const App: React.FC = () => {
                 href={getFullUrl(link.port)}
                 target="_blank"
                 rel="noopener noreferrer"
+                onContextMenu={(e) => handleContextMenu(e, link.id)}
                 className="relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl"
               >
                 {/* Inner Glow */}
@@ -164,7 +263,7 @@ const App: React.FC = () => {
           onMouseLeave={() => mouseX.set(Infinity)}
           className="h-20 px-4 flex items-center gap-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl ring-1 ring-white/10"
         >
-          <DockIcon mouseX={mouseX} onClick={() => setIsAddModalOpen(true)} label="Add App">
+          <DockIcon mouseX={mouseX} onClick={openAddModal} label="Add App">
             <Plus className="w-full h-full text-white" />
           </DockIcon>
           
@@ -235,9 +334,9 @@ const App: React.FC = () => {
         )}
       </AnimatePresence>
 
-      {/* Add Modal */}
+      {/* Link Modal (Add/Edit) */}
       <AnimatePresence>
-        {isAddModalOpen && (
+        {isLinkModalOpen && (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -247,7 +346,7 @@ const App: React.FC = () => {
             <div className="w-full max-w-md bg-[#020617]/85 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/10">
               <div className="h-11 bg-[#1e293b]/50 border-b border-white/5 flex items-center px-4 relative justify-center">
                 <div className="absolute left-4 flex gap-2">
-                  <button onClick={() => setIsAddModalOpen(false)} className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 border border-black/10" />
+                  <button onClick={() => setIsLinkModalOpen(false)} className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 border border-black/10" />
                   <div className="w-3 h-3 rounded-full bg-[#FEBC2E] border border-black/10" />
                   <div className="w-3 h-3 rounded-full bg-[#28C840] border border-black/10" />
                 </div>
@@ -257,18 +356,24 @@ const App: React.FC = () => {
               <div className="p-8 space-y-6">
                 <div className="text-center">
                   <div className="w-20 h-20 bg-blue-500/10 rounded-[24px] mx-auto mb-4 flex items-center justify-center border border-blue-500/20 shadow-inner">
-                    <Plus className="w-10 h-10 text-blue-400" />
+                    {editingLink ? (
+                      <Edit2 className="w-10 h-10 text-blue-400" />
+                    ) : (
+                      <Plus className="w-10 h-10 text-blue-400" />
+                    )}
                   </div>
-                  <h2 className="text-xl font-semibold text-white">Add New Service</h2>
+                  <h2 className="text-xl font-semibold text-white">
+                    {editingLink ? 'Edit Service' : 'Add New Service'}
+                  </h2>
                 </div>
 
-                <form onSubmit={handleAddLink} className="space-y-5">
+                <form onSubmit={handleSaveLink} className="space-y-5">
                   <div>
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">App Name</label>
                     <input
                       type="text"
-                      value={newLinkName}
-                      onChange={(e) => setNewLinkName(e.target.value)}
+                      value={linkName}
+                      onChange={(e) => setLinkName(e.target.value)}
                       className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                       placeholder="Plex"
                       autoFocus
@@ -278,8 +383,8 @@ const App: React.FC = () => {
                     <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Port</label>
                     <input
                       type="text"
-                      value={newLinkPort}
-                      onChange={(e) => setNewLinkPort(e.target.value)}
+                      value={linkPort}
+                      onChange={(e) => setLinkPort(e.target.value)}
                       className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
                       placeholder="32400"
                     />
@@ -289,7 +394,7 @@ const App: React.FC = () => {
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
                   >
-                    Install App
+                    {editingLink ? 'Save Changes' : 'Install App'}
                   </button>
                 </form>
               </div>
