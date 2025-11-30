@@ -1,9 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { X, Settings, Plus, Trash2, ExternalLink, Save, Monitor, Search, Wifi } from 'lucide-react';
+import { X, Settings, Plus, Monitor, Search, Wifi } from 'lucide-react';
 import { useConfig } from './hooks/useConfig';
 import ParticleBackground from './components/ParticleBackground';
-import { cn } from './lib/utils';
 
 // --- Dock Icon Component ---
 function DockIcon({ 
