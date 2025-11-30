@@ -162,7 +162,7 @@ const App: React.FC = () => {
         <motion.div
           onMouseMove={(e) => mouseX.set(e.pageX)}
           onMouseLeave={() => mouseX.set(Infinity)}
-          className="h-20 px-4 flex items-end gap-4 rounded-3xl bg-[#0f172a]/70 backdrop-blur-xl border border-cyan-500/20 shadow-2xl ring-1 ring-white/5"
+          className="h-20 px-4 flex items-center gap-4 rounded-3xl bg-[#0f172a]/70 backdrop-blur-xl border border-cyan-500/20 shadow-2xl ring-1 ring-white/5"
         >
           <DockIcon mouseX={mouseX} onClick={() => setIsAddModalOpen(true)} label="Add App">
             <Plus className="w-full h-full text-cyan-400" />
