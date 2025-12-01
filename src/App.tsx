@@ -235,43 +235,45 @@ const App: React.FC = () => {
               whileHover={{ scale: 1.05 }}
               className="group flex flex-col items-center gap-3 w-32"
             >
-              <a
-                href={getFullUrl(link.port)}
-                target="_blank"
-                rel="noopener noreferrer"
-                onClick={() => handleLinkClick(link)}
-                onContextMenu={(e) => handleContextMenu(e, link.id)}
-                className="relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:-translate-y-1 group-hover:shadow-2xl"
-              >
-                {/* Inner Glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+              <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
+                <a
+                  href={getFullUrl(link.port)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => handleLinkClick(link)}
+                  onContextMenu={(e) => handleContextMenu(e, link.id)}
+                  className="block relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:shadow-2xl"
+                >
+                  {/* Inner Glow */}
+                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+                  
+                  {/* Icon */}
+                  {link.iconUrl ? (
+                    <img 
+                      src={link.iconUrl}
+                      alt={link.name}
+                      className="relative z-10 w-full h-full object-cover"
+                      onError={() => updateLinkIcon(link.id, undefined)}
+                    />
+                  ) : (
+                    <div className="relative z-10 text-3xl font-bold text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300">
+                      {link.name.charAt(0).toUpperCase()}
+                    </div>
+                  )}
+                </a>
                 
-                {/* Icon */}
-                {link.iconUrl ? (
-                  <img 
-                    src={link.iconUrl}
-                    alt={link.name}
-                    className="relative z-10 w-16 h-16 object-contain drop-shadow-md group-hover:scale-110 transition-transform duration-300"
-                    onError={() => updateLinkIcon(link.id, undefined)}
-                  />
-                ) : (
-                  <div className="relative z-10 text-3xl font-bold text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300">
-                    {link.name.charAt(0).toUpperCase()}
-                  </div>
-                )}
-                
-                {/* Hover remove button */}
+                {/* Hover remove button (Outside Icon) */}
                 <button
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     removeLink(link.id);
                   }}
-                  className="absolute top-2 left-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 shadow-lg"
+                  className="absolute -top-2 -left-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 shadow-lg z-20"
                 >
                   <X className="w-3 h-3" />
                 </button>
-              </a>
+              </div>
               <span className="text-sm font-medium text-white drop-shadow-lg text-center truncate w-full px-2">
                 {link.name}
               </span>
