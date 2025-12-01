@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2 } from 'lucide-react';
+import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2, LogOut, User, Shield } from 'lucide-react';
 import { useConfig } from './hooks/useConfig';
 import ParticleBackground from './components/ParticleBackground';
+import LoginPage from './components/LoginPage';
 import { NavLink } from './types';
 
 // --- Context Menu Component ---
@@ -98,6 +99,11 @@ const App: React.FC = () => {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   
+  // Auth State
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('nas_auth') === 'true';
+  });
+
   // Context Menu State
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; linkId: string } | null>(null);
 
@@ -115,6 +121,21 @@ const App: React.FC = () => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
+
+  const handleLogin = (password: string) => {
+    // Simple hardcoded password for demo
+    if (password === 'admin') {
+      localStorage.setItem('nas_auth', 'true');
+      setIsAuthenticated(true);
+      return true;
+    }
+    return false;
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('nas_auth');
+    setIsAuthenticated(false);
+  };
 
   const handleSaveSettings = () => {
     updateBaseUrl(tempBaseUrl);
@@ -189,7 +210,11 @@ const App: React.FC = () => {
     <div className="h-screen w-screen overflow-hidden relative text-slate-100 font-sans selection:bg-cyan-500/30" onClick={() => setContextMenu(null)}>
       <ParticleBackground />
 
-      {/* Context Menu */}
+      {!isAuthenticated && <LoginPage onLogin={handleLogin} />}
+
+      {isAuthenticated && (
+        <>
+          {/* Context Menu */}
       {contextMenu && (
         <ContextMenu
           x={contextMenu.x}
@@ -206,10 +231,24 @@ const App: React.FC = () => {
       {/* Top Status Bar */}
       <div className="absolute top-0 left-0 w-full h-8 px-4 flex justify-between items-center z-20 bg-black/20 backdrop-blur-md border-b border-white/10 text-xs font-medium text-white/90">
         <div className="flex items-center gap-4">
-          <span className="font-bold text-sm text-white drop-shadow-md"> NAS OS</span>
-          <span className="hidden sm:inline hover:text-white transition-colors cursor-default drop-shadow-sm">File</span>
-          <span className="hidden sm:inline hover:text-white transition-colors cursor-default drop-shadow-sm">Edit</span>
-          <span className="hidden sm:inline hover:text-white transition-colors cursor-default drop-shadow-sm">View</span>
+          <span className="font-bold text-sm text-white drop-shadow-md flex items-center gap-2">
+            <Shield className="w-3 h-3 text-blue-400" />
+            NAS OS
+          </span>
+          <div className="h-4 w-[1px] bg-white/10 mx-1" />
+          
+          <button className="flex items-center gap-1.5 hover:text-blue-400 transition-colors cursor-pointer">
+            <User className="w-3 h-3" />
+            <span>Admin</span>
+          </button>
+          
+          <button 
+            onClick={handleLogout}
+            className="flex items-center gap-1.5 hover:text-red-400 transition-colors cursor-pointer"
+          >
+            <LogOut className="w-3 h-3" />
+            <span>Logout</span>
+          </button>
         </div>
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
@@ -428,6 +467,8 @@ const App: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+      </>
+      )}
     </div>
   );
 };
