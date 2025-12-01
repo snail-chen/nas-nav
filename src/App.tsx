@@ -144,6 +144,11 @@ const App: React.FC = () => {
     }
   }, [isSettingsOpen, config]);
 
+  // Sync document title
+  useEffect(() => {
+    document.title = config.siteTitle;
+  }, [config.siteTitle]);
+
   const handleLogin = (u: string, p: string) => {
     return login(u, p);
   };
