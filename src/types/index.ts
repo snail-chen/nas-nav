@@ -9,9 +9,10 @@ export type UserRole = 'admin' | 'user';
 
 export interface User {
   username: string;
-  password: string; // In a real app, this should be hashed. Here just plain text for demo/localStorage
+  password?: string; // Optional, not returned by API for security
   role: UserRole;
   createdAt: number;
+  token?: string; // Session token
 }
 
 export interface AppConfig {

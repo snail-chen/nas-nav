@@ -1,64 +1,102 @@
 import { useState, useEffect } from 'react';
-import { AppConfig, NavLink } from '../types';
+import { NavLink } from '../types';
 
-const STORAGE_KEY = 'nas-nav-config';
+interface Config {
+  siteTitle: string;
+  baseUrl: string;
+  links: NavLink[];
+}
 
-const DEFAULT_CONFIG: AppConfig = {
-  siteTitle: 'NAS OS',
+const DEFAULT_CONFIG: Config = {
+  siteTitle: 'My NAS',
   baseUrl: '192.168.1.100',
   links: [
-    { id: '1', name: 'NAS Dashboard', port: '5000' },
-    { id: '2', name: 'Plex', port: '32400' },
-    { id: '3', name: 'Portainer', port: '9000' },
-  ],
+    { id: '1', name: 'Plex', port: '32400', iconUrl: '' },
+    { id: '2', name: 'Sonarr', port: '8989', iconUrl: '' },
+    { id: '3', name: 'Radarr', port: '7878', iconUrl: '' },
+    { id: '4', name: 'Transmission', port: '9091', iconUrl: '' },
+    { id: '5', name: 'Home Assistant', port: '8123', iconUrl: '' },
+  ]
 };
 
 export const useConfig = () => {
-  const [config, setConfig] = useState<AppConfig>(() => {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    // Merge with default to ensure new fields (like siteTitle) exist for old configs
-    const parsed = stored ? JSON.parse(stored) : DEFAULT_CONFIG;
-    return { ...DEFAULT_CONFIG, ...parsed };
-  });
+  const [config, setConfig] = useState<Config>(DEFAULT_CONFIG);
+  const [loading, setLoading] = useState(true);
 
+  // Load config from API
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
-  }, [config]);
+    fetch('/api/config')
+      .then(res => res.json())
+      .then(data => {
+        setConfig(data);
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Failed to load config', err);
+        setLoading(false);
+      });
+  }, []);
+
+  const saveConfig = (newConfig: Config) => {
+    setConfig(newConfig);
+    fetch('/api/config', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(newConfig)
+    }).catch(err => console.error('Failed to save config', err));
+  };
 
   const updateSiteTitle = (title: string) => {
-    setConfig(prev => ({ ...prev, siteTitle: title }));
+    const newConfig = { ...config, siteTitle: title };
+    saveConfig(newConfig);
   };
 
   const updateBaseUrl = (url: string) => {
-    setConfig(prev => ({ ...prev, baseUrl: url }));
+    const newConfig = { ...config, baseUrl: url };
+    saveConfig(newConfig);
   };
 
   const addLink = (name: string, port: string) => {
     const newLink: NavLink = {
-      id: crypto.randomUUID(),
+      id: Date.now().toString(),
       name,
       port,
     };
-    setConfig(prev => ({ ...prev, links: [...prev.links, newLink] }));
+    const newConfig = { ...config, links: [...config.links, newLink] };
+    saveConfig(newConfig);
   };
 
   const removeLink = (id: string) => {
-    setConfig(prev => ({ ...prev, links: prev.links.filter(l => l.id !== id) }));
+    const newConfig = { ...config, links: config.links.filter(l => l.id !== id) };
+    saveConfig(newConfig);
   };
 
   const updateLink = (id: string, name: string, port: string) => {
-    setConfig(prev => ({
-      ...prev,
-      links: prev.links.map(l => (l.id === id ? { ...l, name, port } : l)),
-    }));
+    const newConfig = {
+      ...config,
+      links: config.links.map(l => l.id === id ? { ...l, name, port } : l)
+    };
+    saveConfig(newConfig);
   };
 
   const updateLinkIcon = (id: string, iconUrl: string | undefined) => {
-    setConfig(prev => ({
-      ...prev,
-      links: prev.links.map(l => (l.id === id ? { ...l, iconUrl } : l)),
-    }));
+    const newConfig = {
+        ...config,
+        links: config.links.map(l => l.id === id ? { ...l, iconUrl } : l)
+    };
+    // Don't save to server for every icon load to avoid spam, 
+    // but for now we save to persist it.
+    saveConfig(newConfig);
   };
 
-  return { config, updateSiteTitle, updateBaseUrl, addLink, removeLink, updateLink, updateLinkIcon };
+  return {
+    config,
+    loading,
+    updateSiteTitle,
+    updateBaseUrl,
+    addLink,
+    removeLink,
+    updateLink,
+    updateLinkIcon
+  };
 };

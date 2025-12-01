@@ -5,6 +5,7 @@ import { useConfig } from './hooks/useConfig';
 import { useAuth } from './hooks/useAuth';
 import ParticleBackground from './components/ParticleBackground';
 import LoginPage from './components/LoginPage';
+import SystemMonitor from './components/SystemMonitor';
 import { NavLink } from './types';
 
 // --- Context Menu Component ---
@@ -110,6 +111,7 @@ const App: React.FC = () => {
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; linkId: string } | null>(null);
 
   // Local state
+  const [isSystemMonitorOpen, setIsSystemMonitorOpen] = useState(false);
   const [tempSiteTitle, setTempSiteTitle] = useState(config.siteTitle);
   const [tempBaseUrl, setTempBaseUrl] = useState(config.baseUrl);
   const [editingLink, setEditingLink] = useState<NavLink | null>(null);
@@ -175,15 +177,16 @@ const App: React.FC = () => {
       return;
     }
 
-    const success = addUser(newUsername, newPassword, 'user');
-    if (success) {
-      setUserSuccess(`用户 ${newUsername} 添加成功。`);
-      setNewUsername('');
-      setNewPassword('');
-      setNewPasswordConfirm('');
-    } else {
-      setUserError('用户已存在。');
-    }
+    addUser(newUsername, newPassword, 'user').then(success => {
+        if (success) {
+          setUserSuccess(`用户 ${newUsername} 添加成功。`);
+          setNewUsername('');
+          setNewPassword('');
+          setNewPasswordConfirm('');
+        } else {
+          setUserError('用户已存在或添加失败。');
+        }
+    });
   };
 
   const handleChangePassword = (e: React.FormEvent) => {
@@ -196,13 +199,14 @@ const App: React.FC = () => {
       return;
     }
 
-    const success = changePassword(changePassNew);
-    if (success) {
-      setUserSuccess('密码修改成功。');
-      setChangePassNew('');
-    } else {
-      setUserError('密码修改失败。');
-    }
+    changePassword(changePassNew).then(success => {
+        if (success) {
+          setUserSuccess('密码修改成功。');
+          setChangePassNew('');
+        } else {
+          setUserError('密码修改失败。');
+        }
+    });
   };
 
   const openAddModal = () => {
@@ -413,7 +417,7 @@ const App: React.FC = () => {
             <Settings className="w-full h-full text-white" />
           </DockIcon>
           
-          <DockIcon mouseX={mouseX} label="系统监控">
+          <DockIcon mouseX={mouseX} onClick={() => setIsSystemMonitorOpen(!isSystemMonitorOpen)} label="系统监控">
             <Monitor className="w-full h-full text-white" />
           </DockIcon>
         </motion.div>
@@ -679,6 +683,9 @@ const App: React.FC = () => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* System Monitor */}
+      <SystemMonitor isOpen={isSystemMonitorOpen} onClose={() => setIsSystemMonitorOpen(false)} />
       </>
       )}
     </div>
