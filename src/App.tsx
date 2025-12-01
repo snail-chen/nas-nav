@@ -43,7 +43,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClo
         className="w-full px-4 py-2 text-left text-sm text-white hover:bg-blue-500/50 flex items-center gap-2 transition-colors"
       >
         <Edit2 className="w-4 h-4" />
-        Edit
+        编辑
       </button>
       <div className="h-[1px] bg-white/10 my-1" />
       <button
@@ -51,7 +51,7 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClo
         className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/20 flex items-center gap-2 transition-colors"
       >
         <Trash2 className="w-4 h-4" />
-        Delete
+        删除
       </button>
     </div>
   );
@@ -151,7 +151,7 @@ const App: React.FC = () => {
   const handleSaveSettings = () => {
     updateSiteTitle(tempSiteTitle);
     updateBaseUrl(tempBaseUrl);
-    setUserSuccess('Settings saved successfully.');
+    setUserSuccess('设置已保存。');
     setTimeout(() => setIsSettingsOpen(false), 800);
   };
 
@@ -161,23 +161,23 @@ const App: React.FC = () => {
     setUserSuccess('');
     
     if (newPassword !== newPasswordConfirm) {
-      setUserError('Passwords do not match.');
+      setUserError('两次输入的密码不一致。');
       return;
     }
     
     if (newUsername.length < 3 || newPassword.length < 3) {
-      setUserError('Username and password must be at least 3 characters.');
+      setUserError('用户名和密码至少需要3个字符。');
       return;
     }
 
     const success = addUser(newUsername, newPassword, 'user');
     if (success) {
-      setUserSuccess(`User ${newUsername} added successfully.`);
+      setUserSuccess(`用户 ${newUsername} 添加成功。`);
       setNewUsername('');
       setNewPassword('');
       setNewPasswordConfirm('');
     } else {
-      setUserError('User already exists.');
+      setUserError('用户已存在。');
     }
   };
 
@@ -187,16 +187,16 @@ const App: React.FC = () => {
     setUserSuccess('');
 
     if (changePassNew.length < 3) {
-      setUserError('Password must be at least 3 characters.');
+      setUserError('密码至少需要3个字符。');
       return;
     }
 
     const success = changePassword(changePassNew);
     if (success) {
-      setUserSuccess('Password updated successfully.');
+      setUserSuccess('密码修改成功。');
       setChangePassNew('');
     } else {
-      setUserError('Failed to update password.');
+      setUserError('密码修改失败。');
     }
   };
 
@@ -302,7 +302,7 @@ const App: React.FC = () => {
           <div className="flex items-center gap-1.5 text-blue-200">
             <User className="w-3 h-3" />
             <span>{currentUser.username}</span>
-            {isAdmin && <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-[10px] border border-blue-500/30">Admin</span>}
+            {isAdmin && <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-[10px] border border-blue-500/30">管理员</span>}
           </div>
           
           <button 
@@ -310,7 +310,7 @@ const App: React.FC = () => {
             className="flex items-center gap-1.5 hover:text-red-400 transition-colors cursor-pointer ml-2"
           >
             <LogOut className="w-3 h-3" />
-            <span>Logout</span>
+            <span>退出登录</span>
           </button>
         </div>
         <div className="flex items-center gap-4">
@@ -319,9 +319,9 @@ const App: React.FC = () => {
             <Search className="w-3 h-3" />
           </div>
           <span>
-            {currentTime.toLocaleDateString([], { weekday: 'short', month: 'short', day: 'numeric' })}
+            {currentTime.toLocaleDateString('zh-CN', { weekday: 'short', month: 'short', day: 'numeric' })}
             {' '}
-            {currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+            {currentTime.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })}
           </span>
         </div>
       </div>
@@ -395,7 +395,7 @@ const App: React.FC = () => {
         >
           {isAdmin && (
             <>
-              <DockIcon mouseX={mouseX} onClick={openAddModal} label="Add App">
+              <DockIcon mouseX={mouseX} onClick={openAddModal} label="添加应用">
                 <Plus className="w-full h-full text-white" />
               </DockIcon>
               <div className="w-[1px] h-10 bg-white/20 my-auto mx-2" />
@@ -404,11 +404,11 @@ const App: React.FC = () => {
 
           <DockIcon mouseX={mouseX} onClick={() => {
             setIsSettingsOpen(true);
-          }} label="Settings">
+          }} label="设置">
             <Settings className="w-full h-full text-white" />
           </DockIcon>
           
-          <DockIcon mouseX={mouseX} label="System">
+          <DockIcon mouseX={mouseX} label="系统监控">
             <Monitor className="w-full h-full text-white" />
           </DockIcon>
         </motion.div>
@@ -431,7 +431,7 @@ const App: React.FC = () => {
                   <div className="w-3 h-3 rounded-full bg-[#FEBC2E] border border-black/10" />
                   <div className="w-3 h-3 rounded-full bg-[#28C840] border border-black/10" />
                 </div>
-                <span className="text-sm font-medium text-slate-400">System Preferences</span>
+                <span className="text-sm font-medium text-slate-400">系统偏好设置</span>
               </div>
 
               <div className="flex flex-1 overflow-hidden">
@@ -443,7 +443,7 @@ const App: React.FC = () => {
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSettingsTab === 'general' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
                     >
                       <Settings className="w-4 h-4" />
-                      General
+                      通用
                     </button>
                    )}
                    {isAdmin && (
@@ -452,7 +452,7 @@ const App: React.FC = () => {
                       className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSettingsTab === 'users' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
                     >
                       <Users className="w-4 h-4" />
-                      Users
+                      用户管理
                     </button>
                    )}
                    <button 
@@ -460,7 +460,7 @@ const App: React.FC = () => {
                     className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSettingsTab === 'profile' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
                   >
                     <User className="w-4 h-4" />
-                    Profile
+                    个人资料
                   </button>
                 </div>
 
@@ -479,10 +479,10 @@ const App: React.FC = () => {
 
                   {activeSettingsTab === 'general' && isAdmin && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">General Settings</h2>
+                      <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">通用设置</h2>
                       <div className="space-y-4">
                         <div>
-                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Site Title</label>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">网站标题</label>
                           <input
                             type="text"
                             value={tempSiteTitle}
@@ -491,7 +491,7 @@ const App: React.FC = () => {
                           />
                         </div>
                         <div>
-                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Base IP / Domain</label>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">基础 IP / 域名</label>
                           <input
                             type="text"
                             value={tempBaseUrl}
@@ -504,7 +504,7 @@ const App: React.FC = () => {
                           onClick={handleSaveSettings}
                           className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
                         >
-                          Save Changes
+                          保存更改
                         </button>
                       </div>
                     </div>
@@ -513,13 +513,13 @@ const App: React.FC = () => {
                   {activeSettingsTab === 'users' && isAdmin && (
                     <div className="space-y-8">
                       <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">Add New User</h2>
+                        <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">添加新用户</h2>
                         <form onSubmit={handleAddUser} className="space-y-3">
                           <input
                             type="text"
                             value={newUsername}
                             onChange={(e) => setNewUsername(e.target.value)}
-                            placeholder="Username"
+                            placeholder="用户名"
                             className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                           />
                           <div className="grid grid-cols-2 gap-3">
@@ -527,14 +527,14 @@ const App: React.FC = () => {
                               type="password"
                               value={newPassword}
                               onChange={(e) => setNewPassword(e.target.value)}
-                              placeholder="Password"
+                              placeholder="密码"
                               className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                             />
                             <input
                               type="password"
                               value={newPasswordConfirm}
                               onChange={(e) => setNewPasswordConfirm(e.target.value)}
-                              placeholder="Confirm Password"
+                              placeholder="确认密码"
                               className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                             />
                           </div>
@@ -542,13 +542,13 @@ const App: React.FC = () => {
                             type="submit"
                             className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2 rounded-lg transition-all shadow-lg active:scale-[0.98]"
                           >
-                            Create User
+                            创建用户
                           </button>
                         </form>
                       </div>
 
                       <div className="space-y-4">
-                        <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">Existing Users</h2>
+                        <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">已存在用户</h2>
                         <div className="space-y-2">
                           {users.map(user => (
                             <div key={user.username} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
@@ -578,23 +578,23 @@ const App: React.FC = () => {
 
                   {activeSettingsTab === 'profile' && (
                     <div className="space-y-6">
-                      <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">Change Password</h2>
+                      <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">修改密码</h2>
                       <form onSubmit={handleChangePassword} className="space-y-4">
                         <div>
-                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">New Password</label>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">新密码</label>
                           <input
                             type="password"
                             value={changePassNew}
                             onChange={(e) => setChangePassNew(e.target.value)}
                             className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all mt-1"
-                            placeholder="Min 3 characters"
+                            placeholder="至少3个字符"
                           />
                         </div>
                         <button
                           type="submit"
                           className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
                         >
-                          Update Password
+                          更新密码
                         </button>
                       </form>
                     </div>
@@ -622,7 +622,7 @@ const App: React.FC = () => {
                   <div className="w-3 h-3 rounded-full bg-[#FEBC2E] border border-black/10" />
                   <div className="w-3 h-3 rounded-full bg-[#28C840] border border-black/10" />
                 </div>
-                <span className="text-sm font-medium text-slate-400">App Store</span>
+                <span className="text-sm font-medium text-slate-400">应用中心</span>
               </div>
 
               <div className="p-8 space-y-6">
@@ -635,13 +635,13 @@ const App: React.FC = () => {
                     )}
                   </div>
                   <h2 className="text-xl font-semibold text-white">
-                    {editingLink ? 'Edit Service' : 'Add New Service'}
+                    {editingLink ? '编辑服务' : '添加新服务'}
                   </h2>
                 </div>
 
                 <form onSubmit={handleSaveLink} className="space-y-5">
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">App Name</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">应用名称</label>
                     <input
                       type="text"
                       value={linkName}
@@ -652,7 +652,7 @@ const App: React.FC = () => {
                     />
                   </div>
                   <div>
-                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Port</label>
+                    <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">端口</label>
                     <input
                       type="text"
                       value={linkPort}
@@ -666,7 +666,7 @@ const App: React.FC = () => {
                     type="submit"
                     className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
                   >
-                    {editingLink ? 'Save Changes' : 'Install App'}
+                    {editingLink ? '保存更改' : '添加应用'}
                   </button>
                 </form>
               </div>

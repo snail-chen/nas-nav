@@ -72,103 +72,103 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
             </motion.h1>
             
             <motion.p 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.4 }}
-              className="text-slate-400 text-sm mb-8 text-center font-light tracking-wide"
-            >
-              Secure Identity Verification
-            </motion.p>
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: 0.4 }}
+                      className="text-slate-400 text-sm mb-8 text-center font-light tracking-wide"
+                    >
+                      安全身份验证
+                    </motion.p>
 
-            <form onSubmit={handleSubmit} className="w-full space-y-4">
-              {/* Username Input */}
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.45 }}
-                className="relative group"
-              >
-                 <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                  <UserIcon className="w-5 h-5" />
-                </div>
-                <input
-                  type="text"
-                  value={username}
-                  onChange={(e) => {
-                    setUsername(e.target.value);
-                    setError(false);
-                  }}
-                  placeholder="Username"
-                  className={`w-full bg-black/30 border ${error ? 'border-red-500/50' : 'border-white/10 group-hover:border-white/20'} rounded-xl pl-12 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500/20' : 'focus:ring-cyan-500/20'} focus:border-transparent transition-all tracking-wide`}
-                  autoFocus
-                />
-              </motion.div>
+                    <form onSubmit={handleSubmit} className="w-full space-y-4">
+                      {/* Username Input */}
+                      <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.45 }}
+                        className="relative group"
+                      >
+                         <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                          <UserIcon className="w-5 h-5" />
+                        </div>
+                        <input
+                          type="text"
+                          value={username}
+                          onChange={(e) => {
+                            setUsername(e.target.value);
+                            setError(false);
+                          }}
+                          placeholder="用户名"
+                          className={`w-full bg-black/30 border ${error ? 'border-red-500/50' : 'border-white/10 group-hover:border-white/20'} rounded-xl pl-12 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500/20' : 'focus:ring-cyan-500/20'} focus:border-transparent transition-all tracking-wide`}
+                          autoFocus
+                        />
+                      </motion.div>
 
-              {/* Password Input */}
-              <motion.div 
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: 0.5 }}
-                className="relative group"
-              >
-                <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
-                  <Lock className="w-5 h-5" />
-                </div>
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => {
-                    setPassword(e.target.value);
-                    setError(false);
-                  }}
-                  placeholder="Password"
-                  className={`w-full bg-black/30 border ${error ? 'border-red-500/50' : 'border-white/10 group-hover:border-white/20'} rounded-xl pl-12 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500/20' : 'focus:ring-cyan-500/20'} focus:border-transparent transition-all tracking-widest`}
-                />
-                {error && (
-                  <motion.div 
-                    initial={{ opacity: 0, x: 10 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400"
-                  >
-                    <AlertCircle className="w-5 h-5" />
-                  </motion.div>
-                )}
-              </motion.div>
+                      {/* Password Input */}
+                      <motion.div 
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: 0.5 }}
+                        className="relative group"
+                      >
+                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-400 transition-colors">
+                          <Lock className="w-5 h-5" />
+                        </div>
+                        <input
+                          type="password"
+                          value={password}
+                          onChange={(e) => {
+                            setPassword(e.target.value);
+                            setError(false);
+                          }}
+                          placeholder="密码"
+                          className={`w-full bg-black/30 border ${error ? 'border-red-500/50' : 'border-white/10 group-hover:border-white/20'} rounded-xl pl-12 pr-4 py-4 text-white placeholder-slate-600 focus:outline-none focus:ring-2 ${error ? 'focus:ring-red-500/20' : 'focus:ring-cyan-500/20'} focus:border-transparent transition-all tracking-widest`}
+                        />
+                        {error && (
+                          <motion.div 
+                            initial={{ opacity: 0, x: 10 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-red-400"
+                          >
+                            <AlertCircle className="w-5 h-5" />
+                          </motion.div>
+                        )}
+                      </motion.div>
 
-              <motion.button
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-                whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(6,182,212,0.3)" }}
-                whileTap={{ scale: 0.98 }}
-                disabled={isLoading}
-                type="submit"
-                className={`w-full ${isLoading ? 'bg-cyan-600/50 cursor-wait' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500'} text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-cyan-900/20 flex items-center justify-center gap-2 group relative overflow-hidden`}
-              >
-                {/* Button Shine Effect */}
-                <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
-                
-                {isLoading ? (
-                  <span className="flex items-center gap-2 relative z-10">
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    Authenticating...
-                  </span>
-                ) : (
-                  <>
-                    <span className="relative z-10">Access Console</span>
-                    <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform relative z-10" />
-                  </>
-                )}
-              </motion.button>
-            </form>
-          </div>
+                      <motion.button
+                        initial={{ opacity: 0, y: 20 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: 0.6 }}
+                        whileHover={{ scale: 1.02, boxShadow: "0 0 20px rgba(6,182,212,0.3)" }}
+                        whileTap={{ scale: 0.98 }}
+                        disabled={isLoading}
+                        type="submit"
+                        className={`w-full ${isLoading ? 'bg-cyan-600/50 cursor-wait' : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500'} text-white font-semibold py-4 rounded-xl transition-all shadow-lg shadow-cyan-900/20 flex items-center justify-center gap-2 group relative overflow-hidden`}
+                      >
+                        {/* Button Shine Effect */}
+                        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                        
+                        {isLoading ? (
+                          <span className="flex items-center gap-2 relative z-10">
+                            <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                            正在验证...
+                          </span>
+                        ) : (
+                          <>
+                            <span className="relative z-10">进入系统</span>
+                            <ChevronRight className="w-4 h-4 group-hover:translate-x-1 transition-transform relative z-10" />
+                          </>
+                        )}
+                      </motion.button>
+                    </form>
+                  </div>
 
-          {/* Footer Status */}
-          <div className="bg-[#020617]/50 border-t border-white/5 p-4 flex justify-between items-center text-[10px] text-slate-500 uppercase tracking-wider font-medium">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
-              System Online
-            </div>
+                  {/* Footer Status */}
+                  <div className="bg-[#020617]/50 border-t border-white/5 p-4 flex justify-between items-center text-[10px] text-slate-500 uppercase tracking-wider font-medium">
+                    <div className="flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.5)]" />
+                      系统在线
+                    </div>
             <div>v2.1.0</div>
           </div>
         </div>
