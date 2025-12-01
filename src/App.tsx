@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2, LogOut, User, Shield } from 'lucide-react';
+import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2, LogOut, User, Shield, Users } from 'lucide-react';
 import { useConfig } from './hooks/useConfig';
+import { useAuth } from './hooks/useAuth';
 import ParticleBackground from './components/ParticleBackground';
 import LoginPage from './components/LoginPage';
 import { NavLink } from './types';
@@ -13,9 +14,10 @@ interface ContextMenuProps {
   onEdit: () => void;
   onDelete: () => void;
   onClose: () => void;
+  isAdmin: boolean;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClose }) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClose, isAdmin }) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -27,6 +29,8 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClo
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [onClose]);
+
+  if (!isAdmin) return null;
 
   return (
     <div
@@ -95,24 +99,31 @@ function DockIcon({
 
 // --- Main App ---
 const App: React.FC = () => {
-  const { config, updateBaseUrl, addLink, removeLink, updateLink, updateLinkIcon } = useConfig();
+  const { config, updateSiteTitle, updateBaseUrl, addLink, removeLink, updateLink, updateLinkIcon } = useConfig();
+  const { currentUser, users, login, logout, addUser, changePassword, deleteUser } = useAuth();
+
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
-  
-  // Auth State
-  const [isAuthenticated, setIsAuthenticated] = useState(() => {
-    return localStorage.getItem('nas_auth') === 'true';
-  });
+  const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'users' | 'profile'>('general');
 
   // Context Menu State
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; linkId: string } | null>(null);
 
   // Local state
+  const [tempSiteTitle, setTempSiteTitle] = useState(config.siteTitle);
   const [tempBaseUrl, setTempBaseUrl] = useState(config.baseUrl);
   const [editingLink, setEditingLink] = useState<NavLink | null>(null);
   const [linkName, setLinkName] = useState('');
   const [linkPort, setLinkPort] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
+
+  // User Management State
+  const [newUsername, setNewUsername] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+  const [changePassNew, setChangePassNew] = useState('');
+  const [userError, setUserError] = useState('');
+  const [userSuccess, setUserSuccess] = useState('');
 
   // Dock mouse tracking
   const mouseX = useMotionValue(Infinity);
@@ -122,24 +133,71 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  const handleLogin = (password: string) => {
-    // Simple hardcoded password for demo
-    if (password === 'admin') {
-      localStorage.setItem('nas_auth', 'true');
-      setIsAuthenticated(true);
-      return true;
+  // Sync local state when config changes or modal opens
+  useEffect(() => {
+    if (isSettingsOpen) {
+      setTempSiteTitle(config.siteTitle);
+      setTempBaseUrl(config.baseUrl);
+      setActiveSettingsTab('general');
+      setUserError('');
+      setUserSuccess('');
     }
-    return false;
-  };
+  }, [isSettingsOpen, config]);
 
-  const handleLogout = () => {
-    localStorage.removeItem('nas_auth');
-    setIsAuthenticated(false);
+  const handleLogin = (u: string, p: string) => {
+    return login(u, p);
   };
 
   const handleSaveSettings = () => {
+    updateSiteTitle(tempSiteTitle);
     updateBaseUrl(tempBaseUrl);
-    setIsSettingsOpen(false);
+    setUserSuccess('Settings saved successfully.');
+    setTimeout(() => setIsSettingsOpen(false), 800);
+  };
+
+  const handleAddUser = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserError('');
+    setUserSuccess('');
+    
+    if (newPassword !== newPasswordConfirm) {
+      setUserError('Passwords do not match.');
+      return;
+    }
+    
+    if (newUsername.length < 3 || newPassword.length < 3) {
+      setUserError('Username and password must be at least 3 characters.');
+      return;
+    }
+
+    const success = addUser(newUsername, newPassword, 'user');
+    if (success) {
+      setUserSuccess(`User ${newUsername} added successfully.`);
+      setNewUsername('');
+      setNewPassword('');
+      setNewPasswordConfirm('');
+    } else {
+      setUserError('User already exists.');
+    }
+  };
+
+  const handleChangePassword = (e: React.FormEvent) => {
+    e.preventDefault();
+    setUserError('');
+    setUserSuccess('');
+
+    if (changePassNew.length < 3) {
+      setUserError('Password must be at least 3 characters.');
+      return;
+    }
+
+    const success = changePassword(changePassNew);
+    if (success) {
+      setUserSuccess('Password updated successfully.');
+      setChangePassNew('');
+    } else {
+      setUserError('Failed to update password.');
+    }
   };
 
   const openAddModal = () => {
@@ -173,6 +231,7 @@ const App: React.FC = () => {
   };
 
   const handleContextMenu = (e: React.MouseEvent, linkId: string) => {
+    if (currentUser?.role !== 'admin') return;
     e.preventDefault();
     setContextMenu({ x: e.clientX, y: e.clientY, linkId });
   };
@@ -206,13 +265,15 @@ const App: React.FC = () => {
     }
   };
 
+  const isAdmin = currentUser?.role === 'admin';
+
   return (
     <div className="h-screen w-screen overflow-hidden relative text-slate-100 font-sans selection:bg-cyan-500/30" onClick={() => setContextMenu(null)}>
       <ParticleBackground />
 
-      {!isAuthenticated && <LoginPage onLogin={handleLogin} />}
+      {!currentUser && <LoginPage siteTitle={config.siteTitle} onLogin={handleLogin} />}
 
-      {isAuthenticated && (
+      {currentUser && (
         <>
           {/* Context Menu */}
       {contextMenu && (
@@ -225,6 +286,7 @@ const App: React.FC = () => {
           }}
           onDelete={handleDeleteLink}
           onClose={() => setContextMenu(null)}
+          isAdmin={isAdmin}
         />
       )}
 
@@ -233,18 +295,19 @@ const App: React.FC = () => {
         <div className="flex items-center gap-4">
           <span className="font-bold text-sm text-white drop-shadow-md flex items-center gap-2">
             <Shield className="w-3 h-3 text-blue-400" />
-            NAS OS
+            {config.siteTitle}
           </span>
           <div className="h-4 w-[1px] bg-white/10 mx-1" />
           
-          <button className="flex items-center gap-1.5 hover:text-blue-400 transition-colors cursor-pointer">
+          <div className="flex items-center gap-1.5 text-blue-200">
             <User className="w-3 h-3" />
-            <span>Admin</span>
-          </button>
+            <span>{currentUser.username}</span>
+            {isAdmin && <span className="px-1.5 py-0.5 rounded bg-blue-500/20 text-[10px] border border-blue-500/30">Admin</span>}
+          </div>
           
           <button 
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 hover:text-red-400 transition-colors cursor-pointer"
+            onClick={logout}
+            className="flex items-center gap-1.5 hover:text-red-400 transition-colors cursor-pointer ml-2"
           >
             <LogOut className="w-3 h-3" />
             <span>Logout</span>
@@ -301,17 +364,19 @@ const App: React.FC = () => {
                   )}
                 </a>
                 
-                {/* Hover remove button (Outside Icon) */}
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    removeLink(link.id);
-                  }}
-                  className="absolute -top-2 -left-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 shadow-lg z-20"
-                >
-                  <X className="w-3 h-3" />
-                </button>
+                {/* Hover remove button (Admin Only) */}
+                {isAdmin && (
+                  <button
+                    onClick={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      removeLink(link.id);
+                    }}
+                    className="absolute -top-2 -left-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 shadow-lg z-20"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                )}
               </div>
               <span className="text-sm font-medium text-white drop-shadow-lg text-center truncate w-full px-2">
                 {link.name}
@@ -328,14 +393,16 @@ const App: React.FC = () => {
           onMouseLeave={() => mouseX.set(Infinity)}
           className="h-20 px-4 flex items-center gap-4 rounded-3xl bg-white/10 backdrop-blur-xl border border-white/20 shadow-2xl ring-1 ring-white/10"
         >
-          <DockIcon mouseX={mouseX} onClick={openAddModal} label="Add App">
-            <Plus className="w-full h-full text-white" />
-          </DockIcon>
-          
-          <div className="w-[1px] h-10 bg-white/20 my-auto mx-2" />
+          {isAdmin && (
+            <>
+              <DockIcon mouseX={mouseX} onClick={openAddModal} label="Add App">
+                <Plus className="w-full h-full text-white" />
+              </DockIcon>
+              <div className="w-[1px] h-10 bg-white/20 my-auto mx-2" />
+            </>
+          )}
 
           <DockIcon mouseX={mouseX} onClick={() => {
-            setTempBaseUrl(config.baseUrl);
             setIsSettingsOpen(true);
           }} label="Settings">
             <Settings className="w-full h-full text-white" />
@@ -356,9 +423,9 @@ const App: React.FC = () => {
             exit={{ opacity: 0, scale: 0.95 }}
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           >
-            <div className="w-full max-w-md bg-[#020617]/85 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/10">
+            <div className="w-full max-w-xl bg-[#020617]/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/10 flex flex-col h-[600px]">
               {/* Window Title Bar */}
-              <div className="h-11 bg-[#1e293b]/50 border-b border-white/5 flex items-center px-4 relative justify-center">
+              <div className="h-11 bg-[#1e293b]/50 border-b border-white/5 flex items-center px-4 relative justify-center shrink-0">
                 <div className="absolute left-4 flex gap-2">
                   <button onClick={() => setIsSettingsOpen(false)} className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 border border-black/10" />
                   <div className="w-3 h-3 rounded-full bg-[#FEBC2E] border border-black/10" />
@@ -367,32 +434,172 @@ const App: React.FC = () => {
                 <span className="text-sm font-medium text-slate-400">System Preferences</span>
               </div>
 
-              <div className="p-8 space-y-6">
-                <div className="text-center">
-                  <div className="w-20 h-20 bg-slate-800/50 rounded-full mx-auto mb-4 flex items-center justify-center border border-white/5 shadow-inner">
-                    <Settings className="w-10 h-10 text-slate-400" />
-                  </div>
-                  <h2 className="text-xl font-semibold text-white">NAS Configuration</h2>
-                  <p className="text-sm text-slate-500 mt-1">Set your base connection URL</p>
+              <div className="flex flex-1 overflow-hidden">
+                {/* Sidebar */}
+                <div className="w-48 bg-black/20 border-r border-white/5 p-4 space-y-1">
+                   {isAdmin && (
+                    <button 
+                      onClick={() => setActiveSettingsTab('general')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSettingsTab === 'general' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                    >
+                      <Settings className="w-4 h-4" />
+                      General
+                    </button>
+                   )}
+                   {isAdmin && (
+                    <button 
+                      onClick={() => setActiveSettingsTab('users')}
+                      className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSettingsTab === 'users' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                    >
+                      <Users className="w-4 h-4" />
+                      Users
+                    </button>
+                   )}
+                   <button 
+                    onClick={() => setActiveSettingsTab('profile')}
+                    className={`w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition-colors ${activeSettingsTab === 'profile' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:bg-white/5 hover:text-white'}`}
+                  >
+                    <User className="w-4 h-4" />
+                    Profile
+                  </button>
                 </div>
 
-                <div className="space-y-2">
-                  <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">IP Address / Domain</label>
-                  <input
-                    type="text"
-                    value={tempBaseUrl}
-                    onChange={(e) => setTempBaseUrl(e.target.value)}
-                    className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all"
-                    placeholder="192.168.1.100"
-                  />
-                </div>
+                {/* Content Area */}
+                <div className="flex-1 p-8 overflow-y-auto custom-scrollbar">
+                  {userSuccess && (
+                    <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 text-sm">
+                      {userSuccess}
+                    </div>
+                  )}
+                  {userError && (
+                    <div className="mb-4 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-400 text-sm">
+                      {userError}
+                    </div>
+                  )}
 
-                <button
-                  onClick={handleSaveSettings}
-                  className="w-full bg-blue-600 hover:bg-blue-500 text-white font-medium py-2.5 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
-                >
-                  Apply Changes
-                </button>
+                  {activeSettingsTab === 'general' && isAdmin && (
+                    <div className="space-y-6">
+                      <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">General Settings</h2>
+                      <div className="space-y-4">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Site Title</label>
+                          <input
+                            type="text"
+                            value={tempSiteTitle}
+                            onChange={(e) => setTempSiteTitle(e.target.value)}
+                            className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all mt-1"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">Base IP / Domain</label>
+                          <input
+                            type="text"
+                            value={tempBaseUrl}
+                            onChange={(e) => setTempBaseUrl(e.target.value)}
+                            className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all mt-1"
+                            placeholder="192.168.1.100"
+                          />
+                        </div>
+                        <button
+                          onClick={handleSaveSettings}
+                          className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
+                        >
+                          Save Changes
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSettingsTab === 'users' && isAdmin && (
+                    <div className="space-y-8">
+                      <div className="space-y-4">
+                        <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">Add New User</h2>
+                        <form onSubmit={handleAddUser} className="space-y-3">
+                          <input
+                            type="text"
+                            value={newUsername}
+                            onChange={(e) => setNewUsername(e.target.value)}
+                            placeholder="Username"
+                            className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                          />
+                          <div className="grid grid-cols-2 gap-3">
+                            <input
+                              type="password"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              placeholder="Password"
+                              className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                            />
+                            <input
+                              type="password"
+                              value={newPasswordConfirm}
+                              onChange={(e) => setNewPasswordConfirm(e.target.value)}
+                              placeholder="Confirm Password"
+                              className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
+                            />
+                          </div>
+                          <button
+                            type="submit"
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2 rounded-lg transition-all shadow-lg active:scale-[0.98]"
+                          >
+                            Create User
+                          </button>
+                        </form>
+                      </div>
+
+                      <div className="space-y-4">
+                        <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">Existing Users</h2>
+                        <div className="space-y-2">
+                          {users.map(user => (
+                            <div key={user.username} className="flex items-center justify-between p-3 bg-white/5 rounded-lg border border-white/5">
+                              <div className="flex items-center gap-3">
+                                <div className="w-8 h-8 rounded-full bg-blue-500/20 flex items-center justify-center text-blue-400">
+                                  <User className="w-4 h-4" />
+                                </div>
+                                <div>
+                                  <div className="font-medium text-white">{user.username}</div>
+                                  <div className="text-xs text-slate-500 capitalize">{user.role}</div>
+                                </div>
+                              </div>
+                              {user.username !== 'admin' && (
+                                <button 
+                                  onClick={() => deleteUser(user.username)}
+                                  className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                >
+                                  <Trash2 className="w-4 h-4" />
+                                </button>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {activeSettingsTab === 'profile' && (
+                    <div className="space-y-6">
+                      <h2 className="text-xl font-semibold text-white border-b border-white/10 pb-2">Change Password</h2>
+                      <form onSubmit={handleChangePassword} className="space-y-4">
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">New Password</label>
+                          <input
+                            type="password"
+                            value={changePassNew}
+                            onChange={(e) => setChangePassNew(e.target.value)}
+                            className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all mt-1"
+                            placeholder="Min 3 characters"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
+                        >
+                          Update Password
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </motion.div>

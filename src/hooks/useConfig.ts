@@ -4,6 +4,7 @@ import { AppConfig, NavLink } from '../types';
 const STORAGE_KEY = 'nas-nav-config';
 
 const DEFAULT_CONFIG: AppConfig = {
+  siteTitle: 'NAS OS',
   baseUrl: '192.168.1.100',
   links: [
     { id: '1', name: 'NAS Dashboard', port: '5000' },
@@ -15,12 +16,18 @@ const DEFAULT_CONFIG: AppConfig = {
 export const useConfig = () => {
   const [config, setConfig] = useState<AppConfig>(() => {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : DEFAULT_CONFIG;
+    // Merge with default to ensure new fields (like siteTitle) exist for old configs
+    const parsed = stored ? JSON.parse(stored) : DEFAULT_CONFIG;
+    return { ...DEFAULT_CONFIG, ...parsed };
   });
 
   useEffect(() => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(config));
   }, [config]);
+
+  const updateSiteTitle = (title: string) => {
+    setConfig(prev => ({ ...prev, siteTitle: title }));
+  };
 
   const updateBaseUrl = (url: string) => {
     setConfig(prev => ({ ...prev, baseUrl: url }));
@@ -53,5 +60,5 @@ export const useConfig = () => {
     }));
   };
 
-  return { config, updateBaseUrl, addLink, removeLink, updateLink, updateLinkIcon };
+  return { config, updateSiteTitle, updateBaseUrl, addLink, removeLink, updateLink, updateLinkIcon };
 };
