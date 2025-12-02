@@ -4,7 +4,7 @@ import { Lock, ChevronRight, AlertCircle, User, ShieldCheck } from 'lucide-react
 
 interface LoginPageProps {
   siteTitle: string;
-  onLogin: (username: string, password: string) => boolean;
+  onLogin: (username: string, password: string) => Promise<boolean>;
 }
 
 const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
@@ -36,8 +36,8 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
     setError(false);
 
     // Simulate processing time
-    setTimeout(() => {
-      const success = onLogin(username, password);
+    setTimeout(async () => {
+      const success = await onLogin(username, password);
       if (success) {
         setIsSuccess(true);
       } else {

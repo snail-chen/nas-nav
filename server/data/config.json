@@ -32,5 +32,6 @@
       "port": "8123",
       "iconUrl": ""
     }
-  ]
+  ],
+  "sessionTimeout": 30
 }

@@ -1,15 +1,17 @@
 import { useState, useEffect } from 'react';
 import { NavLink } from '../types';
 
-interface Config {
+export interface Config {
   siteTitle: string;
   baseUrl: string;
+  sessionTimeout?: number;
   links: NavLink[];
 }
 
 const DEFAULT_CONFIG: Config = {
-  siteTitle: 'My NAS',
+  siteTitle: 'Snail NAS',
   baseUrl: '192.168.1.100',
+  sessionTimeout: 30,
   links: [
     { id: '1', name: 'Plex', port: '32400', iconUrl: '' },
     { id: '2', name: 'Sonarr', port: '8989', iconUrl: '' },
@@ -51,12 +53,17 @@ export const useConfig = () => {
     saveConfig(newConfig);
   };
 
-  const updateBaseUrl = (url: string) => {
+  const updateBaseUrl = async (url: string) => {
     const newConfig = { ...config, baseUrl: url };
-    saveConfig(newConfig);
+    await saveConfig(newConfig);
   };
 
-  const addLink = (name: string, port: string) => {
+  const updateSessionTimeout = async (minutes: number) => {
+    const newConfig = { ...config, sessionTimeout: minutes };
+    await saveConfig(newConfig);
+  };
+
+  const addLink = async (name: string, port: string) => {
     const newLink: NavLink = {
       id: Date.now().toString(),
       name,
@@ -94,6 +101,7 @@ export const useConfig = () => {
     loading,
     updateSiteTitle,
     updateBaseUrl,
+    updateSessionTimeout,
     addLink,
     removeLink,
     updateLink,

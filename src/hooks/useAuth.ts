@@ -85,12 +85,12 @@ export const useAuth = () => {
     localStorage.removeItem(AUTH_STORAGE_KEY);
   };
 
-  const addUser = async (username: string, password: string, role: UserRole) => {
+  const addUser = async (username: string, password: string, role: UserRole, allowConcurrent: boolean = false) => {
     try {
         const res = await fetch('/api/users', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username, password, role })
+            body: JSON.stringify({ username, password, role, allowConcurrent })
         });
         if (res.ok) {
             // Refresh users list
@@ -103,6 +103,42 @@ export const useAuth = () => {
         console.error(e);
         return false;
     }
+  };
+
+  const toggleConcurrent = async (username: string, allowConcurrent: boolean) => {
+      try {
+          const res = await fetch(`/api/users/${username}/concurrent`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ allowConcurrent })
+          });
+          if (res.ok) {
+              setUsers(prev => prev.map(u => u.username === username ? { ...u, allowConcurrent } : u));
+              return true;
+          }
+          return false;
+      } catch (e) {
+          console.error(e);
+          return false;
+      }
+  };
+
+  const resetSession = async (username: string) => {
+      try {
+          const res = await fetch(`/api/users/${username}/reset-session`, {
+              method: 'POST'
+          });
+          if (res.ok) {
+              // Refresh status
+              const newUsers = await (await fetch('/api/users')).json();
+              setUsers(newUsers);
+              return true;
+          }
+          return false;
+      } catch (e) {
+          console.error(e);
+          return false;
+      }
   };
 
   const changePassword = async (password: string) => {
@@ -124,7 +160,7 @@ export const useAuth = () => {
       // Not implemented in UI yet, but if it were:
       // Similar fetch call to /api/password (admin override endpoint needed)
       // For now, skip.
-      console.log('Reset password for', username);
+      console.log('Reset password for', username, newPassword);
   };
 
   const deleteUser = async (username: string) => {
@@ -149,6 +185,8 @@ export const useAuth = () => {
     login,
     logout,
     addUser,
+    toggleConcurrent,
+    resetSession,
     changePassword,
     resetUserPassword,
     deleteUser

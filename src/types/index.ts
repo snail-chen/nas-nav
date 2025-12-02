@@ -13,10 +13,13 @@ export interface User {
   role: UserRole;
   createdAt: number;
   token?: string; // Session token
+  allowConcurrent?: boolean;
+  isOnline?: boolean;
 }
 
 export interface AppConfig {
   siteTitle: string;
   baseUrl: string; // IP or Domain
+  sessionTimeout?: number; // Minutes
   links: NavLink[];
 }

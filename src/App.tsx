@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2, LogOut, User, Shield, Users } from 'lucide-react';
+import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2, LogOut, User, Shield, Users, ToggleLeft, ToggleRight } from 'lucide-react';
 import { useConfig } from './hooks/useConfig';
 import { useAuth } from './hooks/useAuth';
 import ParticleBackground from './components/ParticleBackground';
@@ -100,8 +100,8 @@ function DockIcon({
 
 // --- Main App ---
 const App: React.FC = () => {
-  const { config, updateSiteTitle, updateBaseUrl, addLink, removeLink, updateLink, updateLinkIcon } = useConfig();
-  const { currentUser, users, login, logout, addUser, changePassword, deleteUser } = useAuth();
+  const { config, updateSiteTitle, updateBaseUrl, updateSessionTimeout, addLink, removeLink, updateLink, updateLinkIcon } = useConfig();
+  const { currentUser, users, login, logout, addUser, changePassword, deleteUser, toggleConcurrent, resetSession } = useAuth();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
@@ -114,6 +114,7 @@ const App: React.FC = () => {
   const [isSystemMonitorOpen, setIsSystemMonitorOpen] = useState(false);
   const [tempSiteTitle, setTempSiteTitle] = useState(config.siteTitle);
   const [tempBaseUrl, setTempBaseUrl] = useState(config.baseUrl);
+  const [tempSessionTimeout, setTempSessionTimeout] = useState(config.sessionTimeout || 30);
   const [editingLink, setEditingLink] = useState<NavLink | null>(null);
   const [linkName, setLinkName] = useState('');
   const [linkPort, setLinkPort] = useState('');
@@ -123,6 +124,7 @@ const App: React.FC = () => {
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
+  const [newAllowConcurrent, setNewAllowConcurrent] = useState(false);
   const [changePassNew, setChangePassNew] = useState('');
   const [userError, setUserError] = useState('');
   const [userSuccess, setUserSuccess] = useState('');
@@ -140,6 +142,7 @@ const App: React.FC = () => {
     if (isSettingsOpen) {
       setTempSiteTitle(config.siteTitle);
       setTempBaseUrl(config.baseUrl);
+      setTempSessionTimeout(config.sessionTimeout || 30);
       setActiveSettingsTab('general');
       setUserError('');
       setUserSuccess('');
@@ -158,6 +161,7 @@ const App: React.FC = () => {
   const handleSaveSettings = () => {
     updateSiteTitle(tempSiteTitle);
     updateBaseUrl(tempBaseUrl);
+    updateSessionTimeout(Number(tempSessionTimeout));
     setUserSuccess('设置已保存。');
     setTimeout(() => setIsSettingsOpen(false), 800);
   };
@@ -177,12 +181,13 @@ const App: React.FC = () => {
       return;
     }
 
-    addUser(newUsername, newPassword, 'user').then(success => {
+    addUser(newUsername, newPassword, 'user', newAllowConcurrent).then(success => {
         if (success) {
           setUserSuccess(`用户 ${newUsername} 添加成功。`);
           setNewUsername('');
           setNewPassword('');
           setNewPasswordConfirm('');
+          setNewAllowConcurrent(false);
         } else {
           setUserError('用户已存在或添加失败。');
         }
@@ -509,6 +514,18 @@ const App: React.FC = () => {
                             placeholder="192.168.1.100"
                           />
                         </div>
+                        <div>
+                          <label className="text-xs font-bold text-slate-500 uppercase tracking-wider ml-1">登录保护阈值 (分钟)</label>
+                          <input
+                            type="number"
+                            value={tempSessionTimeout}
+                            onChange={(e) => setTempSessionTimeout(Number(e.target.value))}
+                            className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-transparent transition-all mt-1"
+                            placeholder="30"
+                            min="1"
+                          />
+                          <p className="text-[10px] text-slate-500 mt-1 ml-1">超过此时间无操作需重新验证，用于并发登录检查。</p>
+                        </div>
                         <button
                           onClick={handleSaveSettings}
                           className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-6 py-2 rounded-lg transition-all shadow-lg shadow-blue-900/20 active:scale-[0.98]"
@@ -547,6 +564,16 @@ const App: React.FC = () => {
                               className="w-full bg-black/30 border border-white/10 rounded-lg px-4 py-3 text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 transition-all"
                             />
                           </div>
+                          <div className="flex items-center gap-2 px-1">
+                            <button
+                                type="button"
+                                onClick={() => setNewAllowConcurrent(!newAllowConcurrent)}
+                                className={`flex items-center gap-2 text-sm font-medium transition-colors ${newAllowConcurrent ? 'text-blue-400' : 'text-slate-500'}`}
+                            >
+                                {newAllowConcurrent ? <ToggleRight className="w-5 h-5" /> : <ToggleLeft className="w-5 h-5" />}
+                                允许同时登录 (白名单)
+                            </button>
+                          </div>
                           <button
                             type="submit"
                             className="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-6 py-2 rounded-lg transition-all shadow-lg active:scale-[0.98]"
@@ -566,17 +593,42 @@ const App: React.FC = () => {
                                   <User className="w-4 h-4" />
                                 </div>
                                 <div>
-                                  <div className="font-medium text-white">{user.username}</div>
-                                  <div className="text-xs text-slate-500 capitalize">{user.role}</div>
+                                  <div className="font-medium text-white flex items-center gap-2">
+                                    {user.username}
+                                    {user.isOnline && <span className="w-2 h-2 rounded-full bg-green-500 animate-pulse" title="在线" />}
+                                  </div>
+                                  <div className="text-xs text-slate-500 capitalize flex items-center gap-2">
+                                      {user.role}
+                                      {user.allowConcurrent && <span className="text-blue-400 border border-blue-500/30 px-1 rounded-[4px] text-[10px]">白名单</span>}
+                                  </div>
                                 </div>
                               </div>
                               {user.username !== 'admin' && (
-                                <button 
-                                  onClick={() => deleteUser(user.username)}
-                                  className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                <div className="flex items-center gap-1">
+                                    <button
+                                        onClick={() => toggleConcurrent(user.username, !user.allowConcurrent)}
+                                        className={`p-2 rounded-lg transition-all ${user.allowConcurrent ? 'text-blue-400 bg-blue-500/10' : 'text-slate-600 hover:text-slate-400'}`}
+                                        title={user.allowConcurrent ? "取消白名单" : "设为白名单"}
+                                    >
+                                        <Shield className="w-4 h-4" />
+                                    </button>
+                                    {user.isOnline && (
+                                        <button
+                                            onClick={() => resetSession(user.username)}
+                                            className="p-2 text-slate-400 hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-all"
+                                            title="下线 / 清除会话"
+                                        >
+                                            <LogOut className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    <button 
+                                      onClick={() => deleteUser(user.username)}
+                                      className="p-2 text-slate-400 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                                      title="删除用户"
+                                    >
+                                      <Trash2 className="w-4 h-4" />
+                                    </button>
+                                </div>
                               )}
                             </div>
                           ))}

@@ -52,6 +52,7 @@ const DEFAULT_ADMIN = {
 const DEFAULT_CONFIG = {
   siteTitle: 'My NAS',
   baseUrl: '192.168.1.100',
+  sessionTimeout: 30, // Minutes
   links: [
     { id: '1', name: 'Plex', port: '32400', iconUrl: '' },
     { id: '2', name: 'Sonarr', port: '8989', iconUrl: '' },
@@ -68,7 +69,8 @@ app.post('/api/login', async (req, res) => {
   const { username, password } = req.body;
   const ip = req.headers['x-forwarded-for'] || req.socket.remoteAddress;
   const users = await readJSON(USERS_FILE, [DEFAULT_ADMIN]);
-
+  const config = await readJSON(CONFIG_FILE, DEFAULT_CONFIG);
+  
   const user = users.find(u => u.username === username && u.password === password);
 
   if (!user) {
@@ -76,10 +78,14 @@ app.post('/api/login', async (req, res) => {
   }
 
   // Risk Control: Check Concurrent Login
-  if (activeSessions[username]) {
+  // Exempt Admin and Whitelisted Users
+  const isExempt = user.role === 'admin' || user.allowConcurrent;
+  const sessionTimeoutMs = (config.sessionTimeout || 30) * 60 * 1000;
+
+  if (!isExempt && activeSessions[username]) {
     const session = activeSessions[username];
-    // Check if session is expired (e.g., 30 mins inactivity)
-    if (Date.now() - session.lastActive < 30 * 60 * 1000) {
+    // Check if session is expired
+    if (Date.now() - session.lastActive < sessionTimeoutMs) {
         // Still active
         // If IP is different, BLOCK
         if (session.ip !== ip) {
@@ -99,8 +105,6 @@ app.post('/api/login', async (req, res) => {
     lastActive: Date.now()
   };
 
-  // Clean up old sessions periodically or lazy check
-  
   res.json({ 
     success: true, 
     user: { username: user.username, role: user.role }, 
@@ -146,23 +150,57 @@ app.post('/api/config', async (req, res) => {
 // Get Users (Admin Only)
 app.get('/api/users', async (req, res) => {
     const users = await readJSON(USERS_FILE, [DEFAULT_ADMIN]);
-    // Return users without passwords
-    const safeUsers = users.map(u => ({ username: u.username, role: u.role, createdAt: u.createdAt }));
+    // Return users without passwords, add online status
+    const safeUsers = users.map(u => ({ 
+        username: u.username, 
+        role: u.role, 
+        allowConcurrent: u.allowConcurrent || false,
+        createdAt: u.createdAt,
+        isOnline: !!activeSessions[u.username]
+    }));
     res.json(safeUsers);
 });
 
 // Add User
 app.post('/api/users', async (req, res) => {
-    const { username, password, role } = req.body;
+    const { username, password, role, allowConcurrent } = req.body;
     const users = await readJSON(USERS_FILE, [DEFAULT_ADMIN]);
     
     if (users.find(u => u.username === username)) {
         return res.status(400).json({ message: 'User exists' });
     }
 
-    users.push({ username, password, role, createdAt: Date.now() });
+    users.push({ username, password, role, allowConcurrent: !!allowConcurrent, createdAt: Date.now() });
     await writeJSON(USERS_FILE, users);
     res.json({ success: true });
+});
+
+// Toggle User Concurrent Permission (New)
+app.post('/api/users/:username/concurrent', async (req, res) => {
+    const { username } = req.params;
+    const { allowConcurrent } = req.body;
+    
+    if (username === 'admin') return res.status(400).json({ message: 'Admin settings are fixed' });
+
+    const users = await readJSON(USERS_FILE, [DEFAULT_ADMIN]);
+    const userIndex = users.findIndex(u => u.username === username);
+    
+    if (userIndex === -1) return res.status(404).json({ message: 'User not found' });
+
+    users[userIndex].allowConcurrent = !!allowConcurrent;
+    await writeJSON(USERS_FILE, users);
+    res.json({ success: true });
+});
+
+// Reset User Session (Kick) (New)
+app.post('/api/users/:username/reset-session', (req, res) => {
+    const { username } = req.params;
+    if (activeSessions[username]) {
+        delete activeSessions[username];
+        res.json({ success: true, message: 'Session reset' });
+    } else {
+        res.json({ success: false, message: 'User not active' });
+    }
 });
 
 // Delete User
