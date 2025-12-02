@@ -1,35 +1,78 @@
-# NAS Portal
+# NAS Portal (NAS 导航页)
 
-A modern, beautiful navigation dashboard for your NAS services with interactive particle effects.
+A modern, futuristic, and secure navigation dashboard for your NAS services.
+Built with React, Tailwind CSS, Framer Motion, and Node.js.
 
-## Features
+![License](https://img.shields.io/badge/license-MIT-blue.svg)
+![Docker](https://img.shields.io/badge/docker-ready-green.svg)
 
-- 🎨 **Modern Design**: Glassmorphism UI with a responsive grid layout.
-- ✨ **Interactive Particles**: Background particles react to your mouse movement.
-- ⚙️ **Easy Configuration**: Set your NAS IP/Domain once, and it applies to all services.
-- 🔗 **Simple Management**: Add services by just providing a name and port number.
-- 💾 **Local Storage**: Your configuration is saved locally in your browser.
+## ✨ Features
 
-## Getting Started
+- **🎨 Futuristic UI**: Glassmorphism design, dynamic particle background, and fluid animations.
+- **🛡️ Secure Access**:
+  - User authentication with role-based access control (Admin/User).
+  - **IP Logging**: Tracks login IP addresses.
+  - **Concurrent Login Prevention**: Prevents account sharing/collision (configurable).
+  - **Session Management**: Admins can view online users and kick sessions.
+- **🖥️ System Monitor**: Real-time system status dashboard (simulated for now).
+- **⚙️ Easy Configuration**:
+  - Web-based management for users and service links.
+  - Data persistence via JSON files (easy to backup).
+- **🐳 Docker Ready**: Full-stack containerization for easy deployment.
+
+## 🚀 Getting Started
+
+### Method 1: Docker Compose (Recommended)
+
+1.  Ensure you have Docker and Docker Compose installed.
+2.  Clone this repository.
+3.  Run the following command in the project root:
+
+    ```bash
+    docker-compose up -d
+    ```
+
+4.  Access the dashboard at `http://localhost:3000`.
+
+**Data Persistence**:
+- User data and configuration are stored in the `./data` directory on your host machine (mapped to `/app/server/data` in the container).
+
+### Method 2: Manual Installation
 
 1.  **Install Dependencies**:
     ```bash
+    # Install root dependencies (concurrently, etc.)
     npm install
+
+    # Install server dependencies
+    cd server && npm install && cd ..
     ```
 
 2.  **Run Development Server**:
     ```bash
     npm run dev
     ```
+    This will start both the backend (port 3000) and frontend (port 5173) concurrently.
 
 3.  **Build for Production**:
     ```bash
     npm run build
+    npm run server
     ```
-    The output will be in the `dist` folder, which you can serve with any static web server (Nginx, Apache, etc.).
 
-## Usage
+## 🔑 Default Credentials
 
-1.  Click the **Settings** icon (gear) in the top right to set your NAS IP address or Domain (e.g., `192.168.1.100` or `mynas.com`).
-2.  Click the **Add Service** card to add a new link. Enter the service name (e.g., "Plex") and the port (e.g., "32400").
-3.  The link will be automatically generated as `http://<NAS_IP>:<PORT>`.
+- **Username**: `admin`
+- **Password**: `admin`
+
+> **Important**: Please change the default password immediately after the first login!
+
+## 🛠️ Technology Stack
+
+- **Frontend**: React 18, Vite, Tailwind CSS, Framer Motion, Lucide React
+- **Backend**: Node.js, Express
+- **Deployment**: Docker, Docker Compose
+
+## 📝 License
+
+MIT License

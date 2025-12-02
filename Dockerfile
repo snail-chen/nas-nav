@@ -47,6 +47,9 @@ RUN npm install --production
 # Create data directory
 RUN mkdir -p data
 
+# Volume for persistence
+VOLUME ["/app/server/data"]
+
 # Expose port
 EXPOSE 3000
 

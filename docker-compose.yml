@@ -1,0 +1,14 @@
+version: '3.8'
+
+services:
+  nas-nav:
+    build: .
+    image: nas-nav:latest
+    container_name: nas-nav
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./data:/app/server/data
+    environment:
+      - NODE_ENV=production
+    restart: unless-stopped

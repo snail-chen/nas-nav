@@ -28,6 +28,7 @@
 - **Docker 部署支持 (Docker Deployment)**:
   - **全栈容器化**: 提供了完整的 `Dockerfile`，支持 Node.js 后端与 React 前端的一体化构建与运行。
   - **数据持久化**: 配置了 Volume 挂载点，确保用户数据 (`users.json`) 和配置 (`config.json`) 在容器重启后不丢失。
+  - **Docker Compose**: 新增 `docker-compose.yml` 文件，简化部署流程，一键启动服务。
 
 - **安全与风控 (Security & Risk Control)**:
   - **全栈架构升级**: 引入 Node.js Express 后端服务器，替代纯前端 LocalStorage 存储，提升安全性。
