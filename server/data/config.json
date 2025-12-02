@@ -1,0 +1,36 @@
+{
+  "siteTitle": "My NAS",
+  "baseUrl": "192.168.1.100",
+  "links": [
+    {
+      "id": "1",
+      "name": "Plex",
+      "port": "32400",
+      "iconUrl": ""
+    },
+    {
+      "id": "2",
+      "name": "Sonarr",
+      "port": "8989",
+      "iconUrl": ""
+    },
+    {
+      "id": "3",
+      "name": "Radarr",
+      "port": "7878",
+      "iconUrl": ""
+    },
+    {
+      "id": "4",
+      "name": "Transmission",
+      "port": "9091",
+      "iconUrl": ""
+    },
+    {
+      "id": "5",
+      "name": "Home Assistant",
+      "port": "8123",
+      "iconUrl": ""
+    }
+  ]
+}
