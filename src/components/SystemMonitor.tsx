@@ -20,13 +20,13 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({ isOpen, onClose }) => {
   const [stats, setStats] = useState<SystemStats>({
     cpu: 0,
     memory: 0,
-    storage: 45, // Simulated initial storage
+    storage: 45, // 模拟初始存储
     networkUp: 0,
     networkDown: 0,
     temperature: 40,
   });
 
-  // Simulate data updates
+  // 模拟数据更新
   useEffect(() => {
     if (!isOpen) return;
 
@@ -53,7 +53,7 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({ isOpen, onClose }) => {
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           className="fixed bottom-32 right-8 z-40 w-80 bg-[#020617]/80 backdrop-blur-xl border border-white/10 rounded-2xl shadow-2xl overflow-hidden ring-1 ring-white/10"
         >
-          {/* Header */}
+          {/* 头部 */}
           <div className="h-12 bg-white/5 border-b border-white/5 flex items-center justify-between px-4">
             <div className="flex items-center gap-2 text-white/90 font-medium">
               <Activity className="w-4 h-4 text-emerald-400" />
@@ -67,10 +67,10 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({ isOpen, onClose }) => {
             </button>
           </div>
 
-          {/* Content */}
+          {/* 内容 */}
           <div className="p-5 space-y-6">
             
-            {/* CPU Section */}
+            {/* CPU 部分 */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-medium text-slate-400 uppercase tracking-wider">
                 <span className="flex items-center gap-1.5">
@@ -88,7 +88,7 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({ isOpen, onClose }) => {
               <div className="text-xs text-slate-500 text-right">Temp: {stats.temperature}°C</div>
             </div>
 
-            {/* Memory Section */}
+            {/* 内存部分 */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-medium text-slate-400 uppercase tracking-wider">
                 <span className="flex items-center gap-1.5">
@@ -106,7 +106,7 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({ isOpen, onClose }) => {
               <div className="text-xs text-slate-500 text-right">3.8 GB / 8 GB</div>
             </div>
 
-            {/* Storage Section */}
+            {/* 存储部分 */}
             <div className="space-y-2">
               <div className="flex justify-between text-xs font-medium text-slate-400 uppercase tracking-wider">
                 <span className="flex items-center gap-1.5">
@@ -124,7 +124,7 @@ const SystemMonitor: React.FC<SystemMonitorProps> = ({ isOpen, onClose }) => {
               <div className="text-xs text-slate-500 text-right">1.8 TB / 4 TB</div>
             </div>
 
-            {/* Network Section */}
+            {/* 网络部分 */}
             <div className="bg-white/5 rounded-xl p-3 space-y-3">
               <div className="text-xs font-medium text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
                 <Wifi className="w-3 h-3" /> 网络流量

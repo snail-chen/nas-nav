@@ -1,78 +1,78 @@
 # NAS Portal (NAS 导航页)
 
-A modern, futuristic, and secure navigation dashboard for your NAS services.
-Built with React, Tailwind CSS, Framer Motion, and Node.js.
+一个现代、未来感十足且安全的 NAS 服务导航仪表盘。
+基于 React, Tailwind CSS, Framer Motion 和 Node.js 构建。
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Docker](https://img.shields.io/badge/docker-ready-green.svg)
 
-## ✨ Features
+## ✨ 功能特性
 
-- **🎨 Futuristic UI**: Glassmorphism design, dynamic particle background, and fluid animations.
-- **🛡️ Secure Access**:
-  - User authentication with role-based access control (Admin/User).
-  - **IP Logging**: Tracks login IP addresses.
-  - **Concurrent Login Prevention**: Prevents account sharing/collision (configurable).
-  - **Session Management**: Admins can view online users and kick sessions.
-- **🖥️ System Monitor**: Real-time system status dashboard (simulated for now).
-- **⚙️ Easy Configuration**:
-  - Web-based management for users and service links.
-  - Data persistence via JSON files (easy to backup).
-- **🐳 Docker Ready**: Full-stack containerization for easy deployment.
+- **🎨 未来感 UI**: 毛玻璃设计，动态粒子背景，以及流畅的动画效果。
+- **🛡️ 安全访问**:
+  - 基于角色的用户认证 (管理员/普通用户)。
+  - **IP 记录**: 记录登录 IP 地址。
+  - **并发登录风控**: 防止账号共享/撞库 (可配置)。
+  - **会话管理**: 管理员可以查看在线用户并踢出会话。
+- **🖥️ 系统监控**: 实时系统状态仪表盘 (目前为模拟数据)。
+- **⚙️ 简易配置**:
+  - 基于 Web 的用户和服务链接管理。
+  - 通过 JSON 文件持久化数据 (易于备份)。
+- **🐳 Docker 就绪**: 全栈容器化，便于部署。
 
-## 🚀 Getting Started
+## 🚀 快速开始
 
-### Method 1: Docker Compose (Recommended)
+### 方法 1: Docker Compose (推荐)
 
-1.  Ensure you have Docker and Docker Compose installed.
-2.  Clone this repository.
-3.  Run the following command in the project root:
+1.  确保已安装 Docker 和 Docker Compose。
+2.  克隆此仓库。
+3.  在项目根目录下运行以下命令：
 
     ```bash
     docker-compose up -d
     ```
 
-4.  Access the dashboard at `http://localhost:3000`.
+4.  访问仪表盘：`http://localhost:3000`。
 
-**Data Persistence**:
-- User data and configuration are stored in the `./data` directory on your host machine (mapped to `/app/server/data` in the container).
+**数据持久化**:
+- 用户数据和配置存储在宿主机的 `./data` 目录下 (映射到容器内的 `/app/server/data`)。
 
-### Method 2: Manual Installation
+### 方法 2: 手动安装
 
-1.  **Install Dependencies**:
+1.  **安装依赖**:
     ```bash
-    # Install root dependencies (concurrently, etc.)
+    # 安装根目录依赖 (concurrently 等)
     npm install
 
-    # Install server dependencies
+    # 安装服务端依赖
     cd server && npm install && cd ..
     ```
 
-2.  **Run Development Server**:
+2.  **运行开发服务器**:
     ```bash
     npm run dev
     ```
-    This will start both the backend (port 3000) and frontend (port 5173) concurrently.
+    这将同时启动后端 (端口 3000) 和前端 (端口 5173)。
 
-3.  **Build for Production**:
+3.  **构建生产版本**:
     ```bash
     npm run build
     npm run server
     ```
 
-## 🔑 Default Credentials
+## 🔑 默认凭据
 
-- **Username**: `admin`
-- **Password**: `admin`
+- **用户名**: `admin`
+- **密码**: `admin`
 
-> **Important**: Please change the default password immediately after the first login!
+> **重要**: 请在首次登录后立即修改默认密码！
 
-## 🛠️ Technology Stack
+## 🛠️ 技术栈
 
-- **Frontend**: React 18, Vite, Tailwind CSS, Framer Motion, Lucide React
-- **Backend**: Node.js, Express
-- **Deployment**: Docker, Docker Compose
+- **前端**: React 18, Vite, Tailwind CSS, Framer Motion, Lucide React
+- **后端**: Node.js, Express
+- **部署**: Docker, Docker Compose
 
-## 📝 License
+## 📝 许可证
 
 MIT License

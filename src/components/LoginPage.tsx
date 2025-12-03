@@ -14,11 +14,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
 
-  // Mouse position for interaction
+  // 用于交互的鼠标位置
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
 
-  // Smooth spring animation for the background blob
+  // 背景斑点的平滑弹簧动画
   const springConfig = { damping: 20, stiffness: 100 }; // Softer spring for floaty feel
   const blobX = useSpring(mouseX, springConfig);
   const blobY = useSpring(mouseY, springConfig);
@@ -35,7 +35,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
     setIsLoading(true);
     setError(false);
 
-    // Simulate processing time
+    // 模拟处理时间
     setTimeout(async () => {
       const success = await onLogin(username, password);
       if (success) {
@@ -52,9 +52,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
       className="fixed inset-0 z-50 flex items-center justify-center overflow-hidden bg-[#f0f2f5] font-sans selection:bg-blue-500/20"
       onMouseMove={handleMouseMove}
     >
-      {/* Interactive Background - Vivid Colors for Glass Effect */}
+      {/* 交互式背景 - 玻璃效果的鲜艳色彩 */}
       <div className="absolute inset-0 z-0 overflow-hidden">
-        {/* Mouse Following Blob - Main Light Source */}
+        {/* 跟随鼠标的斑点 - 主光源 */}
         <motion.div
           style={{ 
             x: blobX, 
@@ -65,7 +65,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
           className="absolute w-[60vw] h-[60vw] rounded-full bg-gradient-to-r from-blue-400 to-purple-400 blur-[120px] opacity-40 pointer-events-none mix-blend-multiply"
         />
 
-        {/* Ambient Floating Blobs */}
+        {/* 环境浮动斑点 */}
         <motion.div 
           animate={{ 
             scale: [1, 1.2, 1],
@@ -94,15 +94,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
         transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         className="relative z-10 w-full max-w-[420px] px-6"
       >
-        {/* Ultimate Glass Card */}
+        {/* 极致玻璃卡片 */}
         <div className="relative backdrop-blur-3xl bg-white/30 border border-white/40 shadow-[0_8px_32px_0_rgba(31,38,135,0.15)] rounded-[32px] overflow-hidden ring-1 ring-white/60">
           
-          {/* Noise Texture Overlay (Optional subtle grain) */}
+          {/* 噪点纹理叠加 (可选的细微颗粒感) */}
           <div className="absolute inset-0 opacity-[0.03] bg-[url('https://grainy-gradients.vercel.app/noise.svg')] pointer-events-none" />
 
-          {/* Header Section */}
+          {/* 头部区域 */}
           <div className="pt-12 pb-8 px-10 text-center relative z-10">
-            {/* Logo / Icon */}
+            {/* Logo / 图标 */}
             <motion.div 
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -120,7 +120,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
               </svg>
             </motion.div>
 
-            {/* Site Title */}
+            {/* 网站标题 */}
             <motion.h1 
               initial={{ y: 10, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
@@ -140,11 +140,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
             </motion.p>
           </div>
 
-          {/* Form Section */}
+          {/* 表单区域 */}
           <div className="px-10 pb-12 relative z-10">
             <form onSubmit={handleSubmit} className="space-y-5">
               <div className="space-y-4">
-                {/* Username */}
+                {/* 用户名 */}
                 <div className="relative group">
                   <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-600 transition-colors duration-300" />
                   <input 
@@ -159,7 +159,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
                   />
                 </div>
 
-                {/* Password */}
+                {/* 密码 */}
                 <div className="relative group">
                   <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500 group-focus-within:text-blue-600 transition-colors duration-300" />
                   <input 
@@ -175,7 +175,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
                 </div>
               </div>
 
-              {/* Error Message */}
+              {/* 错误消息 */}
               <AnimatePresence>
                 {error && (
                   <motion.div
@@ -192,7 +192,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
                 )}
               </AnimatePresence>
 
-              {/* Submit Button */}
+              {/* 提交按钮 */}
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
@@ -226,11 +226,11 @@ const LoginPage: React.FC<LoginPageProps> = ({ siteTitle, onLogin }) => {
             </form>
           </div>
           
-          {/* Footer Decorative Line */}
+          {/* 底部装饰线 */}
           <div className="h-[1px] w-full bg-gradient-to-r from-transparent via-white/40 to-transparent" />
         </div>
 
-        {/* Bottom Info */}
+        {/* 底部信息 */}
         <div className="mt-8 text-center space-y-2">
            <p className="text-xs text-slate-500/80 font-semibold tracking-widest uppercase drop-shadow-sm">
              安全环境已就绪

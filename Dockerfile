@@ -18,6 +18,9 @@ RUN npm run build
 # Stage 2: Setup Node.js Server
 FROM node:18-alpine
 
+# Install Nmap for network scanning
+RUN apk add --no-cache nmap
+
 WORKDIR /app
 
 # Copy server package.json

@@ -46,13 +46,13 @@ const ParticleBackground: React.FC = () => {
         const x = Math.random() * canvas.width;
         const y = Math.random() * canvas.height;
         
-        // Aurora / Nebula Palette (Brighter & Colorful)
+        // 极光 / 星云调色板 (更亮且多彩)
         const colors = [
-          'rgba(255, 255, 255, ', // White (Stars)
-          'rgba(167, 139, 250, ', // Violet-400
-          'rgba(244, 114, 182, ', // Pink-400
-          'rgba(56, 189, 248, ',  // Sky-400
-          'rgba(45, 212, 191, ',  // Teal-400
+          'rgba(255, 255, 255, ', // 白色 (星星)
+          'rgba(167, 139, 250, ', // 紫罗兰-400
+          'rgba(244, 114, 182, ', // 粉红-400
+          'rgba(56, 189, 248, ',  // 天空蓝-400
+          'rgba(45, 212, 191, ',  // 蓝绿-400
         ];
         const colorPrefix = colors[Math.floor(Math.random() * colors.length)];
         
@@ -71,15 +71,15 @@ const ParticleBackground: React.FC = () => {
     };
 
     const animate = () => {
-      // Aurora Gradient Background
-      // Using a rich, vibrant gradient instead of deep black
+      // 极光渐变背景
+      // 使用丰富、充满活力的渐变代替深黑色
       const gradient = ctx.createLinearGradient(0, 0, canvas.width, canvas.height);
-      gradient.addColorStop(0, '#4c1d95');   // Violet-900 (Top Left)
-      gradient.addColorStop(0.4, '#312e81'); // Indigo-900
-      gradient.addColorStop(0.7, '#1e3a8a'); // Blue-900
-      gradient.addColorStop(1, '#0f766e');   // Teal-700 (Bottom Right)
+      gradient.addColorStop(0, '#4c1d95');   // 紫罗兰-900 (左上)
+      gradient.addColorStop(0.4, '#312e81'); // 靛蓝-900
+      gradient.addColorStop(0.7, '#1e3a8a'); // 蓝色-900
+      gradient.addColorStop(1, '#0f766e');   // 蓝绿-700 (右下)
       
-      // Alternative brighter approach:
+      // 替代的更亮方案:
       // const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
       // gradient.addColorStop(0, '#312e81'); // Indigo-900
       // gradient.addColorStop(1, '#be185d'); // Pink-700
@@ -149,7 +149,7 @@ const ParticleBackground: React.FC = () => {
             ref={canvasRef}
             className="absolute inset-0 w-full h-full mix-blend-screen"
         />
-        {/* Lighter Vignette */}
+        {/* 较亮的晕影 */}
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,_transparent_0%,_rgba(0,0,0,0.3)_100%)]" />
     </div>
   );

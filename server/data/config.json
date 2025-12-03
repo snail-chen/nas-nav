@@ -1,6 +1,6 @@
 {
-  "siteTitle": "My NAS",
-  "baseUrl": "192.168.1.100",
+  "siteTitle": "Snail NAS",
+  "baseUrl": "snailchen.asia",
   "links": [
     {
       "id": "1",
@@ -31,6 +31,12 @@
       "name": "Home Assistant",
       "port": "8123",
       "iconUrl": ""
+    },
+    {
+      "id": "1764723413144",
+      "name": "fnos",
+      "port": "8000",
+      "iconUrl": "http://snailchen.asia:8000/favicon.ico"
     }
   ],
   "sessionTimeout": 30

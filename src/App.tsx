@@ -1,14 +1,15 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
-import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2, LogOut, User, Shield, Users, ToggleLeft, ToggleRight } from 'lucide-react';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence, Reorder } from 'framer-motion';
+import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2, LogOut, User, Shield, Users, ToggleLeft, ToggleRight, Network } from 'lucide-react';
 import { useConfig } from './hooks/useConfig';
 import { useAuth } from './hooks/useAuth';
 import ParticleBackground from './components/ParticleBackground';
 import LoginPage from './components/LoginPage';
 import SystemMonitor from './components/SystemMonitor';
+import LanManager from './components/LanManager';
 import { NavLink } from './types';
 
-// --- Context Menu Component ---
+// --- 上下文菜单组件 ---
 interface ContextMenuProps {
   x: number;
   y: number;
@@ -16,9 +17,10 @@ interface ContextMenuProps {
   onDelete: () => void;
   onClose: () => void;
   isAdmin: boolean;
+  canDelete?: boolean;
 }
 
-const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClose, isAdmin }) => {
+const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClose, isAdmin, canDelete = true }) => {
   const menuRef = React.useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,19 +48,23 @@ const ContextMenu: React.FC<ContextMenuProps> = ({ x, y, onEdit, onDelete, onClo
         <Edit2 className="w-4 h-4" />
         编辑
       </button>
-      <div className="h-[1px] bg-white/10 my-1" />
-      <button
-        onClick={onDelete}
-        className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/20 flex items-center gap-2 transition-colors"
-      >
-        <Trash2 className="w-4 h-4" />
-        删除
-      </button>
+      {canDelete && (
+        <>
+          <div className="h-[1px] bg-white/10 my-1" />
+          <button
+            onClick={onDelete}
+            className="w-full px-4 py-2 text-left text-sm text-red-400 hover:bg-red-500/20 flex items-center gap-2 transition-colors"
+          >
+            <Trash2 className="w-4 h-4" />
+            删除
+          </button>
+        </>
+      )}
     </div>
   );
 };
 
-// --- Dock Icon Component ---
+// --- Dock 图标组件 ---
 function DockIcon({ 
   children, 
   mouseX, 
@@ -98,20 +104,21 @@ function DockIcon({
   );
 }
 
-// --- Main App ---
+// --- 主应用程序 ---
 const App: React.FC = () => {
-  const { config, updateSettings, addLink, removeLink, updateLink, updateLinkIcon } = useConfig();
+  const { config, updateSettings, addLink, removeLink, updateLink, updateLinkIcon, reorderLinks } = useConfig();
   const { currentUser, users, login, logout, addUser, changePassword, deleteUser, toggleConcurrent, resetSession } = useAuth();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const [isLinkModalOpen, setIsLinkModalOpen] = useState(false);
   const [activeSettingsTab, setActiveSettingsTab] = useState<'general' | 'users' | 'profile'>('general');
 
-  // Context Menu State
+  // 上下文菜单状态
   const [contextMenu, setContextMenu] = useState<{ x: number; y: number; linkId: string } | null>(null);
 
-  // Local state
+  // 本地状态
   const [isSystemMonitorOpen, setIsSystemMonitorOpen] = useState(false);
+  const [isLanManagerOpen, setIsLanManagerOpen] = useState(false);
   const [tempSiteTitle, setTempSiteTitle] = useState(config.siteTitle);
   const [tempBaseUrl, setTempBaseUrl] = useState(config.baseUrl);
   const [tempSessionTimeout, setTempSessionTimeout] = useState(config.sessionTimeout || 30);
@@ -120,7 +127,7 @@ const App: React.FC = () => {
   const [linkPort, setLinkPort] = useState('');
   const [currentTime, setCurrentTime] = useState(new Date());
 
-  // User Management State
+  // 用户管理状态
   const [newUsername, setNewUsername] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [newPasswordConfirm, setNewPasswordConfirm] = useState('');
@@ -129,7 +136,7 @@ const App: React.FC = () => {
   const [userError, setUserError] = useState('');
   const [userSuccess, setUserSuccess] = useState('');
 
-  // Dock mouse tracking
+  // Dock 鼠标追踪
   const mouseX = useMotionValue(Infinity);
 
   useEffect(() => {
@@ -137,7 +144,7 @@ const App: React.FC = () => {
     return () => clearInterval(timer);
   }, []);
 
-  // Sync local state when config changes or modal opens
+  // 当配置更改或模态框打开时同步本地状态
   useEffect(() => {
     if (isSettingsOpen) {
       setTempSiteTitle(config.siteTitle);
@@ -149,7 +156,7 @@ const App: React.FC = () => {
     }
   }, [isSettingsOpen, config]);
 
-  // Sync document title
+  // 同步文档标题
   useEffect(() => {
     document.title = config.siteTitle;
   }, [config.siteTitle]);
@@ -268,6 +275,11 @@ const App: React.FC = () => {
   };
 
   const handleLinkClick = (link: NavLink) => {
+    if (link.id === 'lan-manager') {
+      setIsLanManagerOpen(true);
+      return;
+    }
+
     if (!link.iconUrl) {
       const url = getFullUrl(link.port);
       const cleanUrl = url.endsWith('/') ? url.slice(0, -1) : url;
@@ -291,7 +303,7 @@ const App: React.FC = () => {
 
       {currentUser && (
         <>
-          {/* Context Menu */}
+          {/* 上下文菜单 */}
       {contextMenu && (
         <ContextMenu
           x={contextMenu.x}
@@ -303,10 +315,11 @@ const App: React.FC = () => {
           onDelete={handleDeleteLink}
           onClose={() => setContextMenu(null)}
           isAdmin={isAdmin}
+          canDelete={!config.links.find(l => l.id === contextMenu.linkId)?.isSystem}
         />
       )}
 
-      {/* Top Status Bar */}
+      {/* 顶部状态栏 */}
       <div className="absolute top-0 left-0 w-full h-8 px-4 flex justify-between items-center z-20 bg-black/20 backdrop-blur-md border-b border-white/10 text-xs font-medium text-white/90">
         <div className="flex items-center gap-4">
           <span className="font-bold text-sm text-white drop-shadow-md flex items-center gap-2">
@@ -342,35 +355,50 @@ const App: React.FC = () => {
         </div>
       </div>
 
-      {/* Main Desktop Area (Launchpad Grid) */}
+      {/* 主桌面区域 (启动台网格) */}
       <div className="absolute inset-0 pt-20 pb-32 px-8 z-10 overflow-y-auto custom-scrollbar">
-        <div className="max-w-6xl mx-auto grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-10 place-items-center">
+        <Reorder.Group 
+          axis="y" 
+          values={config.links} 
+          onReorder={reorderLinks}
+          className="max-w-6xl mx-auto flex flex-wrap gap-10 justify-center"
+        >
           {config.links.map((link) => (
-            <motion.div
+            <Reorder.Item
               key={link.id}
+              value={link}
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              whileHover={{ scale: 1.05 }}
-              className="group flex flex-col items-center gap-3 w-32"
+              whileDrag={{ scale: 1.1, zIndex: 50 }}
+              className="group flex flex-col items-center gap-3 w-32 cursor-move relative"
             >
               <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
                 <a
-                  href={getFullUrl(link.port)}
-                  target="_blank"
+                  href={link.id === 'lan-manager' ? undefined : getFullUrl(link.port)}
+                  target={link.id === 'lan-manager' ? undefined : "_blank"}
                   rel="noopener noreferrer"
-                  onClick={() => handleLinkClick(link)}
+                  onClick={(e) => {
+                    if (link.id === 'lan-manager') {
+                        e.preventDefault();
+                    }
+                    handleLinkClick(link);
+                  }}
                   onContextMenu={(e) => handleContextMenu(e, link.id)}
-                  className="block relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:shadow-2xl"
+                  className="block relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:shadow-2xl select-none"
+                  draggable={false}
                 >
-                  {/* Inner Glow */}
+                  {/* 内部发光 */}
                   <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                   
-                  {/* Icon */}
-                  {link.iconUrl ? (
+                  {/* 图标 */}
+                  {link.id === 'lan-manager' ? (
+                     <Network className="w-10 h-10 text-white drop-shadow-md" />
+                  ) : link.iconUrl ? (
                     <img 
                       src={link.iconUrl}
                       alt={link.name}
-                      className="relative z-10 w-full h-full object-cover"
+                      className="relative z-10 w-full h-full object-cover pointer-events-none"
+                      draggable={false}
                       onError={() => updateLinkIcon(link.id, undefined)}
                     />
                   ) : (
@@ -380,9 +408,10 @@ const App: React.FC = () => {
                   )}
                 </a>
                 
-                {/* Hover remove button (Admin Only) */}
-                {isAdmin && (
+                {/* 悬停删除按钮 (仅限管理员且非系统应用) */}
+                {isAdmin && !link.isSystem && (
                   <button
+                    onPointerDown={(e) => e.stopPropagation()}
                     onClick={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
@@ -394,15 +423,15 @@ const App: React.FC = () => {
                   </button>
                 )}
               </div>
-              <span className="text-sm font-medium text-white drop-shadow-lg text-center truncate w-full px-2">
+              <span className="text-sm font-medium text-white drop-shadow-lg text-center truncate w-full px-2 select-none">
                 {link.name}
               </span>
-            </motion.div>
+            </Reorder.Item>
           ))}
-        </div>
+        </Reorder.Group>
       </div>
 
-      {/* Bottom Dock */}
+      {/* 底部 Dock 栏 */}
       <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30">
         <motion.div
           onMouseMove={(e) => mouseX.set(e.pageX)}
@@ -430,7 +459,7 @@ const App: React.FC = () => {
         </motion.div>
       </div>
 
-      {/* Settings Modal */}
+      {/* 设置模态框 */}
       <AnimatePresence>
         {isSettingsOpen && (
           <motion.div
@@ -440,7 +469,7 @@ const App: React.FC = () => {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm"
           >
             <div className="w-full max-w-xl bg-[#020617]/90 backdrop-blur-xl border border-white/10 rounded-xl shadow-2xl overflow-hidden ring-1 ring-white/10 flex flex-col h-[600px]">
-              {/* Window Title Bar */}
+              {/* 窗口标题栏 */}
               <div className="h-11 bg-[#1e293b]/50 border-b border-white/5 flex items-center px-4 relative justify-center shrink-0">
                 <div className="absolute left-4 flex gap-2">
                   <button onClick={() => setIsSettingsOpen(false)} className="w-3 h-3 rounded-full bg-[#FF5F57] hover:bg-[#FF5F57]/80 border border-black/10" />
@@ -451,7 +480,7 @@ const App: React.FC = () => {
               </div>
 
               <div className="flex flex-1 overflow-hidden">
-                {/* Sidebar */}
+                {/* 侧边栏 */}
                 <div className="w-48 bg-black/20 border-r border-white/5 p-4 space-y-1">
                    {isAdmin && (
                     <button 
@@ -480,7 +509,7 @@ const App: React.FC = () => {
                   </button>
                 </div>
 
-                {/* Content Area */}
+                {/* 内容区域 */}
                 <div className="flex-1 p-8 overflow-y-auto custom-scrollbar">
                   {userSuccess && (
                     <div className="mb-4 p-3 bg-green-500/20 border border-green-500/30 rounded-lg text-green-400 text-sm">
@@ -740,6 +769,9 @@ const App: React.FC = () => {
 
       {/* System Monitor */}
       <SystemMonitor isOpen={isSystemMonitorOpen} onClose={() => setIsSystemMonitorOpen(false)} />
+
+      {/* LAN Manager */}
+      <LanManager isOpen={isLanManagerOpen} onClose={() => setIsLanManagerOpen(false)} />
       </>
       )}
     </div>
