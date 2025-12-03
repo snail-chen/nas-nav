@@ -100,7 +100,7 @@ function DockIcon({
 
 // --- Main App ---
 const App: React.FC = () => {
-  const { config, updateSiteTitle, updateBaseUrl, updateSessionTimeout, addLink, removeLink, updateLink, updateLinkIcon } = useConfig();
+  const { config, updateSettings, addLink, removeLink, updateLink, updateLinkIcon } = useConfig();
   const { currentUser, users, login, logout, addUser, changePassword, deleteUser, toggleConcurrent, resetSession } = useAuth();
 
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
@@ -159,9 +159,11 @@ const App: React.FC = () => {
   };
 
   const handleSaveSettings = () => {
-    updateSiteTitle(tempSiteTitle);
-    updateBaseUrl(tempBaseUrl);
-    updateSessionTimeout(Number(tempSessionTimeout));
+    updateSettings({
+      siteTitle: tempSiteTitle,
+      baseUrl: tempBaseUrl,
+      sessionTimeout: Number(tempSessionTimeout)
+    });
     setUserSuccess('设置已保存。');
     setTimeout(() => setIsSettingsOpen(false), 800);
   };

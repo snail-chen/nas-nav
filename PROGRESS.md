@@ -43,3 +43,6 @@
 ### 代码质量 (Code Quality)
 - **类型修复**: 修正了 `User` 接口定义，使其与后端 API 返回的数据结构保持一致（添加 `token`，`password` 设为可选）。
 - **规范修复**: 修正了 `main.tsx` 中的导入路径，移除了不必要的 `.tsx` 后缀，符合 TypeScript/Vite 最佳实践。
+
+### 问题修复 (Bug Fixes)
+- **设置保存修复**: 修复了设置修改后无法保存的问题。重构了前端 `useConfig` Hook，确保配置更新操作（`siteTitle`, `baseUrl`, `sessionTimeout`）能够正确调用后端 API 并持久化到 `config.json` 文件。

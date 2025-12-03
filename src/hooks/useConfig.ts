@@ -39,18 +39,27 @@ export const useConfig = () => {
       });
   }, []);
 
-  const saveConfig = (newConfig: Config) => {
+  const saveConfig = async (newConfig: Config) => {
     setConfig(newConfig);
-    fetch('/api/config', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(newConfig)
-    }).catch(err => console.error('Failed to save config', err));
+    try {
+        await fetch('/api/config', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(newConfig)
+        });
+    } catch (err) {
+        console.error('Failed to save config', err);
+    }
   };
 
-  const updateSiteTitle = (title: string) => {
+  const updateSettings = async (settings: Partial<Config>) => {
+      const newConfig = { ...config, ...settings };
+      await saveConfig(newConfig);
+  };
+
+  const updateSiteTitle = async (title: string) => {
     const newConfig = { ...config, siteTitle: title };
-    saveConfig(newConfig);
+    await saveConfig(newConfig);
   };
 
   const updateBaseUrl = async (url: string) => {
@@ -99,6 +108,7 @@ export const useConfig = () => {
   return {
     config,
     loading,
+    updateSettings,
     updateSiteTitle,
     updateBaseUrl,
     updateSessionTimeout,
