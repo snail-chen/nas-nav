@@ -1,5 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { motion, useMotionValue, useSpring, useTransform, AnimatePresence, Reorder } from 'framer-motion';
+import { motion, useMotionValue, useSpring, useTransform, AnimatePresence } from 'framer-motion';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors, DragEndEvent } from '@dnd-kit/core';
+import { arrayMove, SortableContext, sortableKeyboardCoordinates, rectSortingStrategy, useSortable } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { X, Settings, Plus, Monitor, Search, Wifi, Edit2, Trash2, LogOut, User, Shield, Users, ToggleLeft, ToggleRight, Network } from 'lucide-react';
 import { useConfig } from './hooks/useConfig';
 import { useAuth } from './hooks/useAuth';
@@ -104,6 +107,112 @@ function DockIcon({
   );
 }
 
+// --- Sortable Item Component ---
+interface SortableItemProps {
+  link: NavLink;
+  getFullUrl: (port: string) => string;
+  handleLinkClick: (link: NavLink) => void;
+  handleContextMenu: (e: React.MouseEvent, linkId: string) => void;
+  updateLinkIcon: (id: string, iconUrl: string | undefined) => void;
+  removeLink: (id: string) => void;
+  isAdmin: boolean;
+}
+
+const SortableItem: React.FC<SortableItemProps> = ({
+  link,
+  getFullUrl,
+  handleLinkClick,
+  handleContextMenu,
+  updateLinkIcon,
+  removeLink,
+  isAdmin
+}) => {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging
+  } = useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    zIndex: isDragging ? 50 : 'auto',
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      {...attributes}
+      {...listeners}
+      className="group flex flex-col items-center gap-3 w-32 cursor-move relative touch-none"
+    >
+      <motion.div
+        initial={{ opacity: 0, scale: 0.8 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="relative transition-transform duration-300 group-hover:-translate-y-1 w-full flex justify-center"
+      >
+        <a
+          href={link.id === 'lan-manager' ? undefined : getFullUrl(link.port)}
+          target={link.id === 'lan-manager' ? undefined : "_blank"}
+          rel="noopener noreferrer"
+          onClick={(e) => {
+            if (link.id === 'lan-manager') {
+                e.preventDefault();
+            }
+            // Prevent navigation if we were dragging (dnd-kit usually handles this via activationConstraint, but good to be safe)
+            handleLinkClick(link);
+          }}
+          onContextMenu={(e) => handleContextMenu(e, link.id)}
+          className="block relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:shadow-2xl select-none"
+          draggable={false}
+        >
+          {/* 内部发光 */}
+          <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
+          
+          {/* 图标 */}
+          {link.id === 'lan-manager' ? (
+             <Network className="w-10 h-10 text-white drop-shadow-md" />
+          ) : link.iconUrl ? (
+            <img 
+              src={link.iconUrl}
+              alt={link.name}
+              className="relative z-10 w-full h-full object-cover pointer-events-none"
+              draggable={false}
+              onError={() => updateLinkIcon(link.id, undefined)}
+            />
+          ) : (
+            <div className="relative z-10 text-3xl font-bold text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300">
+              {link.name.charAt(0).toUpperCase()}
+            </div>
+          )}
+        </a>
+        
+        {/* 悬停删除按钮 (仅限管理员且非系统应用) */}
+        {isAdmin && !link.isSystem && (
+          <button
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              removeLink(link.id);
+            }}
+            className="absolute -top-2 -left-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 shadow-lg z-20"
+          >
+            <X className="w-3 h-3" />
+          </button>
+        )}
+      </motion.div>
+      <span className="text-sm font-medium text-white drop-shadow-lg text-center truncate w-full px-2 select-none">
+        {link.name}
+      </span>
+    </div>
+  );
+};
+
 // --- 主应用程序 ---
 const App: React.FC = () => {
   const { config, updateSettings, addLink, removeLink, updateLink, updateLinkIcon, reorderLinks } = useConfig();
@@ -138,6 +247,28 @@ const App: React.FC = () => {
 
   // Dock 鼠标追踪
   const mouseX = useMotionValue(Infinity);
+
+  // --- Dnd Kit Sensors ---
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+
+    if (over && active.id !== over.id) {
+      const oldIndex = config.links.findIndex((l) => l.id === active.id);
+      const newIndex = config.links.findIndex((l) => l.id === over.id);
+      reorderLinks(arrayMove(config.links, oldIndex, newIndex));
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
@@ -357,78 +488,31 @@ const App: React.FC = () => {
 
       {/* 主桌面区域 (启动台网格) */}
       <div className="absolute inset-0 pt-20 pb-32 px-8 z-10 overflow-y-auto custom-scrollbar">
-        <Reorder.Group 
-          axis="y" 
-          values={config.links} 
-          onReorder={reorderLinks}
-          className="max-w-6xl mx-auto flex flex-wrap gap-10 justify-center"
+        <DndContext 
+          sensors={sensors} 
+          collisionDetection={closestCenter} 
+          onDragEnd={handleDragEnd}
         >
-          {config.links.map((link) => (
-            <Reorder.Item
-              key={link.id}
-              value={link}
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              whileDrag={{ scale: 1.1, zIndex: 50 }}
-              className="group flex flex-col items-center gap-3 w-32 cursor-move relative"
-            >
-              <div className="relative transition-transform duration-300 group-hover:-translate-y-1">
-                <a
-                  href={link.id === 'lan-manager' ? undefined : getFullUrl(link.port)}
-                  target={link.id === 'lan-manager' ? undefined : "_blank"}
-                  rel="noopener noreferrer"
-                  onClick={(e) => {
-                    if (link.id === 'lan-manager') {
-                        e.preventDefault();
-                    }
-                    handleLinkClick(link);
-                  }}
-                  onContextMenu={(e) => handleContextMenu(e, link.id)}
-                  className="block relative w-24 h-24 rounded-[24px] bg-white/10 backdrop-blur-md border border-white/20 shadow-xl flex items-center justify-center overflow-hidden group-hover:bg-white/20 transition-all duration-300 group-hover:shadow-2xl select-none"
-                  draggable={false}
-                >
-                  {/* 内部发光 */}
-                  <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-white/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-                  
-                  {/* 图标 */}
-                  {link.id === 'lan-manager' ? (
-                     <Network className="w-10 h-10 text-white drop-shadow-md" />
-                  ) : link.iconUrl ? (
-                    <img 
-                      src={link.iconUrl}
-                      alt={link.name}
-                      className="relative z-10 w-full h-full object-cover pointer-events-none"
-                      draggable={false}
-                      onError={() => updateLinkIcon(link.id, undefined)}
-                    />
-                  ) : (
-                    <div className="relative z-10 text-3xl font-bold text-white drop-shadow-md group-hover:scale-110 transition-transform duration-300">
-                      {link.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                </a>
-                
-                {/* 悬停删除按钮 (仅限管理员且非系统应用) */}
-                {isAdmin && !link.isSystem && (
-                  <button
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      removeLink(link.id);
-                    }}
-                    className="absolute -top-2 -left-2 p-1.5 rounded-full bg-red-500 text-white opacity-0 group-hover:opacity-100 transition-all hover:bg-red-600 hover:scale-110 shadow-lg z-20"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                )}
-              </div>
-              <span className="text-sm font-medium text-white drop-shadow-lg text-center truncate w-full px-2 select-none">
-                {link.name}
-              </span>
-            </Reorder.Item>
-          ))}
-        </Reorder.Group>
+          <SortableContext 
+            items={config.links.map(l => l.id)} 
+            strategy={rectSortingStrategy}
+          >
+            <div className="max-w-6xl mx-auto flex flex-wrap gap-10 justify-center">
+              {config.links.map((link) => (
+                <SortableItem
+                  key={link.id}
+                  link={link}
+                  getFullUrl={getFullUrl}
+                  handleLinkClick={handleLinkClick}
+                  handleContextMenu={handleContextMenu}
+                  updateLinkIcon={updateLinkIcon}
+                  removeLink={removeLink}
+                  isAdmin={isAdmin}
+                />
+              ))}
+            </div>
+          </SortableContext>
+        </DndContext>
       </div>
 
       {/* 底部 Dock 栏 */}

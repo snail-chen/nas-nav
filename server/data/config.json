@@ -3,12 +3,6 @@
   "baseUrl": "snailchen.asia",
   "links": [
     {
-      "id": "1",
-      "name": "Plex",
-      "port": "32400",
-      "iconUrl": ""
-    },
-    {
       "id": "3",
       "name": "Radarr",
       "port": "7878",
@@ -18,6 +12,12 @@
       "id": "2",
       "name": "Sonarr",
       "port": "8989",
+      "iconUrl": ""
+    },
+    {
+      "id": "1",
+      "name": "Plex",
+      "port": "32400",
       "iconUrl": ""
     },
     {
