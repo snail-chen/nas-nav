@@ -9,15 +9,15 @@
       "iconUrl": ""
     },
     {
-      "id": "2",
-      "name": "Sonarr",
-      "port": "8989",
-      "iconUrl": ""
-    },
-    {
       "id": "3",
       "name": "Radarr",
       "port": "7878",
+      "iconUrl": ""
+    },
+    {
+      "id": "2",
+      "name": "Sonarr",
+      "port": "8989",
       "iconUrl": ""
     },
     {
@@ -37,6 +37,12 @@
       "name": "fnos",
       "port": "8000",
       "iconUrl": "http://snailchen.asia:8000/favicon.ico"
+    },
+    {
+      "id": "lan-manager",
+      "name": "LAN Manager",
+      "port": "0",
+      "isSystem": true
     }
   ],
   "sessionTimeout": 30

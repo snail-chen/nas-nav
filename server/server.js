@@ -7,6 +7,7 @@ import { fileURLToPath } from 'url';
 import wol from 'wake_on_lan';
 import { exec } from 'child_process';
 import util from 'util';
+import os from 'os';
 
 const execPromise = util.promisify(exec);
 
@@ -263,20 +264,36 @@ app.post('/api/password', async (req, res) => {
 // 扫描局域网
 app.get('/api/lan/scan', async (req, res) => {
   try {
-    // Detect subnet (simplified, assumes /24)
-    // 简单的子网检测，假设为 /24
-    const { stdout: ipOut } = await execPromise("ip route get 1 | awk '{print $7}'");
-    const localIp = ipOut.trim();
+    // Detect local IP and subnet using Node.js os module (Cross-platform)
+    // 使用 Node.js os 模块检测本地 IP 和子网 (跨平台)
+    const interfaces = os.networkInterfaces();
+    let localIp = '';
+    let subnetCidr = '/24'; // Default fallback
+
+    // Find the first non-internal IPv4 address
+    for (const name of Object.keys(interfaces)) {
+        for (const iface of interfaces[name]) {
+            if (iface.family === 'IPv4' && !iface.internal) {
+                localIp = iface.address;
+                // Calculate CIDR from netmask if possible, or assume /24
+                // e.g. 255.255.255.0 -> 24
+                // Simple heuristic: use the first one found
+                break;
+            }
+        }
+        if (localIp) break;
+    }
     
     if (!localIp) throw new Error('Could not determine local IP');
     
-    // Assume /24 subnet
+    // Assume /24 subnet for simplicity
     const subnet = localIp.substring(0, localIp.lastIndexOf('.')) + '.0/24';
     console.log(`Scanning subnet: ${subnet} from IP: ${localIp}`);
 
     // Run nmap
     // -sn: Ping Scan - disable port scan
     // nmap output format varies, we parse basic info
+    // NOTE: nmap must be installed and in PATH
     const { stdout } = await execPromise(`nmap -sn ${subnet}`);
     
     const devices = [];
@@ -317,9 +334,30 @@ app.get('/api/lan/scan', async (req, res) => {
     
     res.json(devices);
   } catch (error) {
-    console.error('Scan error:', error);
-    // Fallback for dev environment where nmap/ip might be missing
-    res.status(500).json({ error: 'Scan failed', details: error.message });
+    let errorMsg = error.message;
+    
+    // Check for common "command not found" errors
+    // 检查常见的“命令未找到”错误
+    const isCommandNotFound = 
+        error.code === 'ENOENT' ||
+        (error.code === 1 && error.cmd?.startsWith('nmap')) ||
+        error.message.includes('not found') || 
+        error.message.includes('not recognized') || 
+        error.stderr?.includes('not recognized') ||
+        error.stderr?.includes('不是内部或外部命令'); // Chinese Windows
+
+    if (isCommandNotFound) {
+        errorMsg = 'Nmap 未安装或未在 PATH 中。本地测试请安装 Nmap (https://nmap.org/download.html)，或直接使用 Docker 部署测试。';
+        // Log friendly warning instead of full stack trace for expected missing dependency
+        // 对于预期的缺失依赖，记录友好的警告而不是完整的堆栈跟踪
+        console.warn('[LAN Manager] Nmap not found. Scan functionality requires Nmap.');
+    } else {
+        // Log full error for unexpected issues
+        // 对于意外问题，记录完整错误
+        console.error('Scan error:', error);
+    }
+    
+    res.status(500).json({ error: 'Scan failed', details: errorMsg });
   }
 });
 

@@ -57,3 +57,9 @@
 
 ### 问题修复 (Bug Fixes)
 - **设置保存修复**: 修复了设置修改后无法保存的问题。重构了前端 `useConfig` Hook，确保配置更新操作（`siteTitle`, `baseUrl`, `sessionTimeout`）能够正确调用后端 API 并持久化到 `config.json` 文件。
+- **Windows 兼容性修复**: 
+  - 修复了后端服务器在 Windows 环境下无法检测本地 IP 的问题（替换 `ip route` 为 `os.networkInterfaces`）。
+  - 优化了 LAN Manager 的错误处理机制：
+    - 增强了对 Windows 中文系统下 Nmap 缺失错误的检测逻辑（兼容乱码输出）。
+    - 在控制台中隐藏了预期的 Nmap 缺失报错堆栈，改用友好的警告信息。
+    - 修复了前端无法显示后端返回的详细错误信息的问题。

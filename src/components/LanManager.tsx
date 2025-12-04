@@ -36,7 +36,8 @@ const LanManager: React.FC<LanManagerProps> = ({ isOpen, onClose }) => {
       if (res.ok) {
           setDevices(data);
       } else {
-          throw new Error(data.error || 'Scan failed');
+          // Prefer details if available, otherwise error message
+          throw new Error(data.details || data.error || 'Scan failed');
       }
     } catch (err: any) {
       setMessage({ type: 'error', text: '扫描失败: ' + err.message });
